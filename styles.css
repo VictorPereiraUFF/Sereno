@@ -1,0 +1,321 @@
+/* =========================================
+   SERENO — Estilo Sensorial (Low Stimulus)
+   ========================================= */
+
+:root {
+  /* Paleta Suave e Fosca */
+  --bg-color: #F6F8FA;       /* Cinza muito claro, evita o brilho do branco puro */
+  --card-bg: #FFFFFF;
+  --text-main: #2D3748;      /* Cinza escuro, menos agressivo que preto #000 */
+  --text-muted: #6B7280;     /* Cinza médio para textos secundários */
+  
+  /* Cores de Ação (Tons Pastéis/Mates) */
+  --accent: #71D1B3;         /* Verde Água (Calmante) */
+  --accent-hover: #5EBE9F;   /* Variação leve para hover */
+  --danger: #EF4444;         /* Vermelho fosco */
+  
+  /* Estrutura */
+  --radius: 12px;            /* Bordas arredondadas (mais amigáveis) */
+  --spacing: 20px;
+}
+
+/* Reset Básico */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.6; /* Espaçamento entre linhas para facilitar leitura */
+  padding: 32px 16px;
+  
+  /* Desativa animações globais para evitar desconforto */
+  transition: none; 
+}
+
+/* Container Central */
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* =========================================
+   Cabeçalho
+   ========================================= */
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+  background-color: var(--accent);
+  color: white;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-main);
+}
+
+.brand p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* =========================================
+   Cartões (Cards)
+   ========================================= */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: var(--spacing);
+  margin-bottom: 20px;
+  
+  /* Borda sutil em vez de sombra forte */
+  border: 1px solid #E5E7EB; 
+}
+
+.big-card {
+  padding: 28px;
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.section-title small {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+/* =========================================
+   Controles e Botões
+   ========================================= */
+.btn {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.btn:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Botão "Fantasma" (Borda apenas) */
+.btn.ghost {
+  background-color: transparent;
+  color: var(--text-main);
+  border: 1px solid #D1D5DB;
+}
+
+.btn.ghost:hover {
+  background-color: #F3F4F6;
+  border-color: #9CA3AF;
+}
+
+.btn.warn {
+  background-color: var(--danger);
+}
+
+/* =========================================
+   Toggles (Switches) - Visual Plano
+   ========================================= */
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.switch {
+  width: 48px;
+  height: 28px;
+  background-color: #E5E7EB;
+  border-radius: 99px;
+  position: relative;
+  transition: background-color 0.2s; /* Transição muito rápida apenas para feedback */
+}
+
+/* A bolinha do switch */
+.knob {
+  width: 22px;
+  height: 22px;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  font-size: 0; /* Esconde texto de acessibilidade visualmente */
+  transition: transform 0.2s;
+}
+
+/* Estado Ativo (.on é adicionado pelo JS) */
+.switch.on {
+  background-color: var(--accent);
+}
+
+.switch.on .knob {
+  transform: translateX(20px);
+}
+
+/* =========================================
+   Medidor de Som (Meter)
+   ========================================= */
+.meter {
+  height: 10px;
+  background-color: #EEF2F7;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+  position: relative;
+}
+
+/* Barra de progresso interna */
+.meter i {
+  display: block;
+  height: 100%;
+  background-color: var(--accent);
+  width: 0%; /* Controlado via JS */
+  transition: width 0.5s ease-out; /* Movimento suave, não brusco */
+}
+
+/* =========================================
+   Lista de Scripts
+   ========================================= */
+.scripts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.script-item {
+  background-color: #F9FAFB;
+  border: 1px solid #EEF2F7;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.script-item .text {
+  font-style: italic;
+  color: var(--text-main);
+}
+
+/* =========================================
+   Rodapé e Estrutura Lateral
+   ========================================= */
+aside .card {
+  /* Em telas grandes, fixa o menu lateral */
+  position: sticky;
+  top: 20px;
+}
+
+footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 40px;
+  padding-bottom: 20px;
+}
+
+.pill {
+  background-color: #E5E7EB;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* =========================================
+   Layout Responsivo (Grid)
+   ========================================= */
+main {
+  display: grid;
+  gap: 20px;
+}
+
+/* Telas maiores que 768px */
+@media (min-width: 768px) {
+  main {
+    grid-template-columns: 2fr 1fr; /* 2 partes conteúdo, 1 parte lateral */
+  }
+}
+
+/* =========================================
+   Modais (Pop-ups)
+   ========================================= */
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4); /* Escurecimento suave */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 24px;
+  border-radius: var(--radius);
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.modal .actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Atributo 'hidden' nativo do HTML5 */
+[hidden] {
+  display: none !important;
+}
+
+/* =========================================
+   Modo Baixa Estimulação (Ativado pelo Botão)
+   ========================================= */
+body.low-stimulus {
+  --accent: #9CA3AF; /* Torna o verde em cinza */
+  --bg-color: #F3F4F6;
+}
+
+body.low-stimulus .meter i {
+  transition: none; /* Remove movimento da barra */
+}
