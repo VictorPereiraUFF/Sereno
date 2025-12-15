@@ -9,12 +9,15 @@ import io
 from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Body # type: ignore
 from fastapi.responses import JSONResponse, StreamingResponse # type: ignore
 from fastapi.security import OAuth2PasswordRequestForm # type: ignore
-from fastapi.middleware.cors import CORSMiddleware  # type: ignore # <--- IMPORTAÇÃO ADICIONADA PARA INTEGRAÇÃO
+from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 
 # Importações de Banco de Dados e Segurança
 from sqlmodel import SQLModel, Field, create_engine, Session, select # type: ignore
 from passlib.hash import bcrypt # type: ignore
 from jose import jwt, JWTError # type: ignore
+
+# Importação da IA
+from openai import OpenAI # type: ignore
 
 # ---------- CONFIGURAÇÃO BÁSICA ----------
 SECRET_KEY = os.getenv("SERENO_SECRET", "change_this_secret_in_prod")
@@ -22,6 +25,9 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 dias
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sereno.db")
+
+# Configuração do Cliente OpenAI (Certifique-se de ter a var de ambiente OPENAI_API_KEY)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Configuração do Banco de Dados (SQLite)
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
@@ -334,6 +340,39 @@ def download_latest_backup(request: Request, session: Session = Depends(get_sess
     
     return StreamingResponse(io.BytesIO(b.blob), media_type="application/octet-stream", headers={"Content-Disposition": f"attachment; filename={b.filename}"})
 
+# ---------- ROTA DE IA (CHAT) ----------
+
+@app.post("/ai/chat", tags=["ai"])
+def chat_with_ai(payload: dict = Body(...), request: Request = None, session: Session = Depends(get_session)):
+    """
+    Rota para conversar com o Sereno AI (Requer Login).
+    """
+    # 1. Verifica segurança (apenas usuários logados)
+    user = get_current_user_from_header(request, session)
+    if not user:
+        raise HTTPException(status_code=401, detail="Autenticação necessária para acessar a IA.")
+    
+    user_message = payload.get("message", "")
+    if not user_message:
+        raise HTTPException(status_code=400, detail="Mensagem vazia.")
+
+    # 2. Processa com a IA
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Você é um assistente pessoal focado em organização, calma e bem-estar. Seja sucinto."},
+                {"role": "user", "content": user_message}
+            ]
+        )
+        ai_reply = response.choices[0].message.content
+        return {"response": ai_reply}
+    
+    except Exception as e:
+        # Fallback gracioso se a API falhar
+        print(f"Erro AI: {e}")
+        return {"response": "Não consegui processar seu pensamento agora. Tente novamente mais tarde."}
+
 # ---------- ROTA DE DESENVOLVIMENTO ----------
 @app.delete("/dev/reset-db", tags=["dev"])
 def reset_db():
@@ -347,4 +386,3 @@ if __name__ == "__main__":
     import uvicorn # type: ignore
     # Roda o servidor na porta 8000
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-[cite_start]``` [cite: 11, 14, 25, 27, 36, 43] # type: ignore
