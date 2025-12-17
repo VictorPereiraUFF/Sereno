@@ -3,268 +3,88 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sereno — Assistente sensorial</title>
-
+  <title>Sereno — Assistente Pessoal</title>
   <link rel="stylesheet" href="styles.css">
-  <meta name="description" content="Sereno — assistente sensorial de apoio para pessoas autistas. Privacidade por padrão, processamento local." />
 </head>
 <body>
   <div class="page" id="app">
     <header>
-      <div class="logo" aria-hidden="true">Se</div>
+      <div class="logo">Se</div>
       <div class="brand">
         <h1>Sereno</h1>
-        <p>Assistente sensorial — Privacidade por padrão</p>
+        <p>Privacidade e Inclusão</p>
       </div>
     </header>
 
     <main>
       <section>
-        <article class="card big-card" aria-labelledby="det-title">
+        <article class="card big-card">
           <div class="section-title">
-            <h2 id="det-title">Detecção em tempo real</h2>
-            <small>Processamento local — sem uploads</small>
+            <h2>Monitoramento</h2>
+            <small>Local</small>
           </div>
-
           <div>
-            <div>
-              <label class="toggle" for="micToggle">
-                <div>
-                  <strong>Microfone</strong>
-                  <div>Detecta picos de som no ambiente</div>
-                </div>
-               
-                <div>
-                  <div class="switch" id="micSwitch" role="switch" aria-checked="false" tabindex="0">
-                    <div class="knob">[Switch Microfone]</div>
-                  </div>
-                </div>
-              </label>
-
-              <div>
-                <div class="meter" aria-hidden="true">
-                    <i id="soundLevel"></i>
-                </div>
-                <div>
-                  <span>Nível atual: </span>
-                  <span id="levelPct">8%</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label class="toggle" for="camToggle">
-                <div>
-                  <strong>Câmera (opcional)</strong>
-                  <div>Detecta flashes / brilho intenso — apenas frames locais</div>
-                </div>
-                <div>
-                  <div class="switch" id="camSwitch" role="switch" aria-checked="false" tabindex="0">
-                    <div class="knob">[Switch Câmera]</div>
-                  </div>
-                </div>
-              </label>
-
-              <div>Sensibilidade: <span class="pill">Média</span></div>
-            </div>
+            <label class="toggle">
+              <div><strong>Microfone</strong><br><small>Detectar ruídos</small></div>
+              <div class="switch" id="micSwitch"><div class="knob"></div></div>
+            </label>
+            <div class="meter"><i id="soundLevel" style="width: 10%;"></i></div>
+            <div style="margin-top:5px; font-size:12px">Nível: <span id="levelPct">10%</span></div>
           </div>
-
-          <hr />
-
-          <div>
-            <button class="btn" id="lowStimBtn">Ativar Modo Baixa Estimulação</button>
-            <button class="btn ghost" id="suggestBtn">Ver Sugestões</button>
-            <button class="btn ghost" id="ignoreBtn">Ignorar Notificações</button>
-
-            <div>Logs: <span id="logCount">0</span></div>
-          </div>
-
+          <hr>
+          <button class="btn" id="lowStimBtn">Modo Baixa Estimulação</button>
+          <div style="margin-top:10px; font-size:12px; color:#888">Eventos registrados: <span id="logCount">0</span></div>
         </article>
 
-        <article class="card" aria-labelledby="scripts-title">
+        <article class="card">
           <div class="section-title">
-            <h2 id="scripts-title">Scripts Sociais</h2>
-            <small>Frases curtas e editáveis</small>
+            <h2>Assistente</h2>
+            <small>Texto e Imagem</small>
           </div>
+          
+          <div class="chat-container">
+            <div id="chatHistory" class="chat-history">
+              <div class="message ai-msg">Olá. Posso analisar ambientes (foto) ou ajudar com situações sociais.</div>
+            </div>
 
+            <div id="filePreview" class="file-preview hidden">
+              <span id="fileName">arquivo.jpg</span>
+              <button class="close-preview" id="clearFile">✕</button>
+            </div>
+
+            <div class="chat-input-area">
+              <input type="file" id="mediaInput" accept="image/*" style="display:none">
+              <button class="btn ghost icon-btn" id="attachBtn" title="Anexar Foto">📷</button>
+              <input type="text" id="userTextInput" placeholder="Digite aqui...">
+              <button class="btn" id="sendBtn">Enviar</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="section-title">
+            <h2>Scripts Rápidos</h2>
+          </div>
           <div class="scripts-list" id="scriptsList">
-            <div class="script-item">
-              <div class="text">"Preciso de um minuto, por favor."</div>
-              <div>
-                <button class="btn ghost" aria-label="Copiar">Copiar</button>
-                <button class="btn" aria-label="Falar">Falar</button>
-              </div>
             </div>
-            <div class="script-item">
-              <div class="text">"O barulho está me deixando desconfortável."</div>
-              <div>
-                <button class="btn ghost">Copiar</button>
-                <button class="btn">Falar</button>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <button class="btn ghost" id="addScript">+ Adicionar Script</button>
-            <button class="btn" id="manageScripts">Gerenciar</button>
-          </div>
-
         </article>
-
       </section>
 
       <aside>
         <div class="card">
-          <div class="section-title">
-            <h2>Privacidade</h2>
-            <small>Controle total</small>
-          </div>
-
-          <p>Por padrão, tudo é processado no seu aparelho. Gravações e imagens não são salvas nem enviadas. Você decide o que compartilhar.</p>
-
-          <div>
-            <div>
-              <div>Salvar logs (opcional)</div>
-              <div class="switch" id="logSwitch" role="switch" aria-checked="false" tabindex="0"><div class="knob">[Switch Logs]</div></div>
-            </div>
-
-            <div>
-              <div>Backup criptografado</div>
-              <button class="btn ghost">Configurar</button>
-            </div>
-
-            <div>
-              <div>Apagar tudo</div>
-              <button class="btn warn">Apagar</button>
-            </div>
-
-          </div>
+          <h3>Privacidade</h3>
+          <p>O backend processa imagens na memória e salva textos no banco local (SQLite).</p>
+          <button class="btn warn" style="margin-top:10px; width:100%">Limpar Dados Locais</button>
         </div>
-
-        <div class="card">
-          <h3>Modo Baixa Estimulação</h3>
-          <p>Ajustes rápidos para reduzir estímulos visuais e sonoros.</p>
-
-          <div>
-            <label>
-              <span>Reduzir brilho</span>
-              <input type="checkbox" id="optBrightness" />
-            </label>
-            <label>
-              <span>Desativar animações</span>
-              <input type="checkbox" id="optAnim" checked />
-            </label>
-            <label>
-              <span>Som do app silencioso</span>
-              <input type="checkbox" id="optSound" checked />
-            </label>
-          </div>
-        </div>
-
       </aside>
     </main>
 
-    <footer>
-      <div>Sereno — Assistente de apoio. Não substitui terapia.</div>
-      <div>Versão de protótipo • Privacidade por padrão</div>
+    <footer class="app-footer">
+      <p>Sereno — Assistente de apoio cotidiano.</p>
+      <p><strong>Importante:</strong> Este sistema não fornece diagnósticos médicos e <u>não substitui terapia tradicional</u>.</p>
     </footer>
 
-    <div id="consentModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
-      <div class="modal">
-        <h3 id="consentTitle">Permissão de uso — resumo</h3>
-        <p>Este app detecta sons e padrões visuais <strong>apenas no seu aparelho</strong> para avisar quando algo pode causar desconforto. Não gravamos nem enviamos seu áudio ou vídeo sem sua permissão. Guardamos apenas preferências e, somente se você aceitar, um registro simples de eventos (tipo + hora). Você pode usar o app sem criar conta — tudo fica no seu aparelho.</p>
-        <div class="actions">
-          <button class="btn ghost" id="declineBtn">Não aceito</button>
-          <button class="btn" id="acceptBtn">Aceito</button>
-        </div>
-      </div>
-    </div>
-
   </div>
-
-  <script>
-    // Pequena lógica para demonstrar toggles e modal.
-    (function(){
-      const micSwitch = document.getElementById('micSwitch');
-      const camSwitch = document.getElementById('camSwitch');
-      const logSwitch = document.getElementById('logSwitch');
-      const lowStimBtn = document.getElementById('lowStimBtn');
-      const consentModal = document.getElementById('consentModal');
-      const acceptBtn = document.getElementById('acceptBtn');
-      const declineBtn = document.getElementById('declineBtn');
-      const soundLevel = document.getElementById('soundLevel');
-      const levelPct = document.getElementById('levelPct');
-      const logCount = document.getElementById('logCount');
-
-      let logs = 0;
-      let simLevel = 8;
-
-      function toggleSwitch(el){
-        el.classList.toggle('on');
-        const isOn = el.classList.contains('on');
-        el.setAttribute('aria-checked', isOn);
-        return isOn;
-      }
-
-      micSwitch.addEventListener('click', ()=> toggleSwitch(micSwitch));
-      camSwitch.addEventListener('click', ()=> toggleSwitch(camSwitch));
-      logSwitch.addEventListener('click', ()=> toggleSwitch(logSwitch));
-
-      // keyboard accessibility
-      [micSwitch, camSwitch, logSwitch].forEach(el=>{
-        el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); toggleSwitch(el);} });
-      });
-
-      // simulate sound level changes
-      setInterval(()=>{
-        // only update if mic is on
-        if(micSwitch.classList.contains('on')){
-          simLevel = Math.min(100, Math.max(0, simLevel + (Math.random()*12-6)) );
-          // Removido estilo visual da barra de progresso, mantendo apenas texto
-          levelPct.textContent = Math.round(simLevel) + '%';
-
-          // if above threshold (65) create an event
-          if(simLevel > 65){
-            logs++;
-            logCount.textContent = logs;
-            
-            // Notification logic (Visual CSS styling removed)
-            const card = document.createElement('div');
-            card.textContent = 'Som alto detectado — Ativar Modo Baixa Estimulação';
-            
-            // Adiciona apenas o texto ao final da página
-            document.body.appendChild(card);
-            setTimeout(()=>card.remove(),6000);
-          }
-        }
-      }, 850);
-
-      // Low stim mode toggling (example behavior)
-      lowStimBtn.addEventListener('click', ()=>{
-        document.body.classList.toggle('low-stimulus');
-        const active = document.body.classList.contains('low-stimulus');
-        lowStimBtn.textContent = active ? 'Modo Baixa Estimulação Ativo' : 'Ativar Modo Baixa Estimulação';
-      });
-
-      // consent modal
-      acceptBtn.addEventListener('click', ()=>{
-        // Removido style.display, usando hidden attribute ou apenas lógica
-        consentModal.hidden = true; 
-        localStorage.setItem('sereno_consent','yes');
-      });
-      declineBtn.addEventListener('click', ()=>{
-        consentModal.hidden = true;
-        localStorage.setItem('sereno_consent','no');
-      });
-
-      // hide modal if already answered
-      const consent = localStorage.getItem('sereno_consent');
-      if(consent){ 
-          consentModal.hidden = true;
-      }
-
-    })();
-  </script>
   <script src="conexao.js"></script>
 </body>
 </html>
