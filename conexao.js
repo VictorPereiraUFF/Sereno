@@ -1,53 +1,66 @@
 // ===============================
-//  SERENO — Integração Frontend <-> Backend
-// ===============================
-
-const API_FASTAPI = "http://localhost:8000"; // Backend Principal
-const API_FLASK = "http://localhost:5000";   // Backend IA
-
-// ===============================
-// 1. Carregar Scripts Sociais (do FastAPI)
-// ===============================
-async function loadScripts() {
-    try {// ===============================
 //  SERENO — Frontend Controller
 // ===============================
 
-// Agora usamos APENAS UM backend
+// Backend unificado (FastAPI)
 const API_URL = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
     setupMicSimulation();
-    loadScripts();
+    loadScripts(); // Carrega scripts (online ou offline)
     setupChat();
 });
 
 // ===============================
-// 1. Scripts Sociais (Do Banco de Dados)
+// 1. Scripts Sociais (Com Fallback Offline)
 // ===============================
 async function loadScripts() {
     const container = document.getElementById("scriptsList");
+
+    // Função auxiliar para desenhar o script na tela (evita repetição)
+    const renderScript = (msg) => {
+        const item = document.createElement("div");
+        item.className = "script-item";
+        item.innerHTML = `
+            <div class="text">"${msg}"</div>
+            <div style="display:flex;gap:8px">
+                <button class="btn ghost" onclick="navigator.clipboard.writeText('${msg}')">Copiar</button>
+                <button class="btn" onclick="falarTexto('${msg}')">Falar</button>
+            </div>
+        `;
+        container.appendChild(item);
+    };
+
     try {
+        // Tenta buscar do servidor
         const res = await fetch(`${API_URL}/scripts`);
+        if(!res.ok) throw new Error("Offline");
+        
         const scripts = await res.json();
         
+        // Se o servidor retornar lista vazia, usa fallback também
+        if (scripts.length === 0) throw new Error("Lista vazia");
+
         container.innerHTML = "";
-        scripts.forEach(s => {
-            const item = document.createElement("div");
-            item.className = "script-item";
-            item.innerHTML = `
-                <div class="text">"${s.message}"</div>
-                <div style="display:flex;gap:8px">
-                    <button class="btn ghost" onclick="falarTexto('${s.message}')">Falar</button>
-                </div>
-            `;
-            container.appendChild(item);
-        });
+        scripts.forEach(s => renderScript(s.message));
+
     } catch (e) {
-        container.innerHTML = "<small>Erro ao carregar scripts do servidor.</small>";
+        console.warn("Backend offline ou sem dados. Carregando scripts de emergência.");
+        container.innerHTML = "";
+        
+        // --- ADIÇÃO: Scripts Rápidos (Offline) ---
+        const scriptsLocais = [
+            "Preciso de um minuto para processar isso.",
+            "O ambiente está muito barulhento para mim.",
+            "Poderia repetir mais devagar, por favor?",
+            "Prefiro continuar essa conversa por texto.",
+            "Não estou me sentindo bem, preciso sair."
+        ];
+        scriptsLocais.forEach(msg => renderScript(msg));
     }
 }
 
+// Função Global de Fala
 window.falarTexto = function(texto) {
     const utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = "pt-BR";
@@ -122,7 +135,7 @@ function setupChat() {
             // Atualiza resposta
             loadingDiv.innerText = data.resposta;
         } catch (e) {
-            loadingDiv.innerText = "Erro de conexão com o servidor (Porta 8000).";
+            loadingDiv.innerText = "Erro de conexão (Backend Offline). Tente novamente mais tarde.";
         }
     }
 
@@ -166,7 +179,7 @@ function setupMicSimulation() {
                 if (simLevel > 85) {
                     logs++;
                     if(logCount) logCount.textContent = logs;
-                    // Envia log silencioso para o servidor
+                    // Tenta enviar log silencioso, se falhar não faz nada
                     fetch(`${API_URL}/events`, {
                         method: "POST", 
                         headers: {"Content-Type": "application/json"},
@@ -184,104 +197,3 @@ function setupMicSimulation() {
         });
     }
 }
-        // Tenta buscar do backend (porta 8000)
-        const response = await fetch(`${API_FASTAPI}/scripts`);
-        
-        if (!response.ok) throw new Error("Falha ao buscar scripts");
-
-        const scripts = await response.json();
-        const container = document.getElementById("scriptsList");
-
-        if (scripts.length > 0) {
-            container.innerHTML = ""; // Limpa os exemplos hardcoded do HTML
-            
-            scripts.forEach(script => {
-                const item = document.createElement("div");
-                item.className = "script-item";
-                item.innerHTML = `
-                    <div class="text">"${script.message}"</div>
-                    <div style="display:flex;gap:8px">
-                        <button class="btn ghost" onclick="navigator.clipboard.writeText('${script.message}')">Copiar</button>
-                        <button class="btn" onclick="falarTexto('${script.message}')">Falar</button>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-        }
-    } catch (error) {
-        console.warn("Backend offline, usando scripts visuais padrão.", error);
-    }
-}
-
-// ===============================
-// 2. Integração com IA Social (do Flask)
-// ===============================
-const suggestBtn = document.getElementById("suggestBtn");
-
-if (suggestBtn) {
-    suggestBtn.addEventListener("click", async () => {
-        const originalText = suggestBtn.innerText;
-        suggestBtn.innerText = "Pensando...";
-        
-        try {
-            // Envia uma situação genérica para a IA (pode ser customizado)
-            const response = await fetch(`${API_FLASK}/api/social-helper`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ situation: "Estou em um lugar barulhento e me sentindo sobrecarregado." })
-            });
-
-            const data = await response.json();
-            alert(`Sugestão da IA: \n\n${data.response}`);
-            
-        } catch (error) {
-            alert("Não foi possível conectar à IA Auxiliar (Porta 5000).");
-        } finally {
-            suggestBtn.innerText = originalText;
-        }
-    });
-}
-
-// ===============================
-// 3. Utilitários (TTS e Logs)
-// ===============================
-
-// Função para o navegador "falar" o texto (Acessibilidade)
-window.falarTexto = function(texto) {
-    const utterance = new SpeechSynthesisUtterance(texto);
-    utterance.lang = "pt-BR";
-    window.speechSynthesis.speak(utterance);
-};
-
-// Hook no log de eventos (conecta com a simulação do HTML)
-// Observa mudanças no contador de logs para enviar ao backend
-const logCountElement = document.getElementById("logCount");
-if(logCountElement) {
-    const observer = new MutationObserver(async () => {
-        const count = parseInt(logCountElement.innerText);
-        if (count > 0) {
-            // Envia evento de 'pico_som' para o FastAPI
-            try {
-                await fetch(`${API_FASTAPI}/events`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        event_type: "pico_som",
-                        value: 80.0, // Valor simulado
-                        device_id: "browser_client",
-                        timestamp: new Date().toISOString()
-                    })
-                });
-                console.log("Evento registrado no servidor.");
-            } catch (e) {
-                console.warn("Erro ao salvar log no servidor.");
-            }
-        }
-    });
-    observer.observe(logCountElement, { childList: true });
-}
-
-// Inicializa
-document.addEventListener("DOMContentLoaded", () => {
-    loadScripts();
-});
