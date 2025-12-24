@@ -2,22 +2,21 @@
 //  SERENO — Frontend Controller
 // ===============================
 
-// Backend unificado (FastAPI)
 const API_URL = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
     setupMicSimulation();
-    loadScripts(); // Carrega scripts (online ou offline)
+    loadScripts(); // Carrega scripts (online ou fallback offline)
     setupChat();
 });
 
 // ===============================
-// 1. Scripts Sociais (Com Fallback Offline)
+// 1. Scripts Sociais (Híbrido)
 // ===============================
 async function loadScripts() {
     const container = document.getElementById("scriptsList");
-
-    // Função auxiliar para desenhar o script na tela (evita repetição)
+    
+    // Função auxiliar para criar HTML
     const renderScript = (msg) => {
         const item = document.createElement("div");
         item.className = "script-item";
@@ -32,23 +31,21 @@ async function loadScripts() {
     };
 
     try {
-        // Tenta buscar do servidor
+        // Tenta buscar do backend
         const res = await fetch(`${API_URL}/scripts`);
         if(!res.ok) throw new Error("Offline");
         
         const scripts = await res.json();
-        
-        // Se o servidor retornar lista vazia, usa fallback também
         if (scripts.length === 0) throw new Error("Lista vazia");
 
         container.innerHTML = "";
         scripts.forEach(s => renderScript(s.message));
 
     } catch (e) {
-        console.warn("Backend offline ou sem dados. Carregando scripts de emergência.");
+        console.warn("Backend offline. Carregando scripts de emergência.");
         container.innerHTML = "";
         
-        // --- ADIÇÃO: Scripts Rápidos (Offline) ---
+        // --- Scripts Offline (Funcionam sempre) ---
         const scriptsLocais = [
             "Preciso de um minuto para processar isso.",
             "O ambiente está muito barulhento para mim.",
@@ -60,7 +57,7 @@ async function loadScripts() {
     }
 }
 
-// Função Global de Fala
+// Fala Global
 window.falarTexto = function(texto) {
     const utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = "pt-BR";
@@ -68,7 +65,7 @@ window.falarTexto = function(texto) {
 };
 
 // ===============================
-// 2. Chat Multimodal (Texto + Imagem)
+// 2. Chat Multimodal
 // ===============================
 function setupChat() {
     const chatHistory = document.getElementById("chatHistory");
@@ -82,10 +79,8 @@ function setupChat() {
 
     let selectedFileBase64 = null;
 
-    // Abrir arquivo
     if(attachBtn) attachBtn.addEventListener("click", () => mediaInput.click());
 
-    // Converter imagem para Base64
     if(mediaInput) mediaInput.addEventListener("change", () => {
         const file = mediaInput.files[0];
         if (file) {
@@ -106,17 +101,14 @@ function setupChat() {
         filePreview.classList.add("hidden");
     });
 
-    // Enviar para FastAPI
     async function sendMessage() {
         const text = userTextInput.value.trim();
         if (!text && !selectedFileBase64) return;
 
-        // UI Feedback
         let userHtml = text;
         if(selectedFileBase64) userHtml += " <br><small>📎 [Imagem]</small>";
         appendMessage(userHtml, true);
 
-        // Limpeza UI
         userTextInput.value = "";
         filePreview.classList.add("hidden");
         const imgToSend = selectedFileBase64;
@@ -131,11 +123,9 @@ function setupChat() {
                 body: JSON.stringify({ texto: text, imagem: imgToSend })
             });
             const data = await res.json();
-            
-            // Atualiza resposta
             loadingDiv.innerText = data.resposta;
         } catch (e) {
-            loadingDiv.innerText = "Erro de conexão (Backend Offline). Tente novamente mais tarde.";
+            loadingDiv.innerText = "Erro: Servidor não respondeu. Verifique se o Python está rodando.";
         }
     }
 
@@ -155,7 +145,7 @@ function setupChat() {
 }
 
 // ===============================
-// 3. Simulação de Sensores
+// 3. Simulação Sensores
 // ===============================
 function setupMicSimulation() {
     const micSwitch = document.getElementById('micSwitch');
@@ -179,7 +169,6 @@ function setupMicSimulation() {
                 if (simLevel > 85) {
                     logs++;
                     if(logCount) logCount.textContent = logs;
-                    // Tenta enviar log silencioso, se falhar não faz nada
                     fetch(`${API_URL}/events`, {
                         method: "POST", 
                         headers: {"Content-Type": "application/json"},

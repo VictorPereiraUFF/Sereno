@@ -3,183 +3,97 @@
    ========================================= */
 
 :root {
-  /* Paleta Suave e Fosca */
-  --bg-color: #F6F8FA;       /* Cinza muito claro */
+  --bg-color: #F6F8FA;      
   --card-bg: #FFFFFF;
-  --text-main: #2D3748;      /* Cinza escuro */
-  --text-muted: #6B7280;     /* Cinza médio */
+  --text-main: #2D3748;      
+  --text-muted: #6B7280;     
   
-  /* Cores de Ação */
-  --accent: #71D1B3;         /* Verde Água (Calmante) */
+  --accent: #71D1B3;         /* Verde Água */
   --accent-hover: #5EBE9F;   
-  --danger: #EF4444;         /* Vermelho fosco */
+  --danger: #EF4444;         
   
-  /* Estrutura */
   --radius: 12px;
   --spacing: 20px;
 }
 
-/* Reset Básico */
 * { box-sizing: border-box; }
 
 body {
-  margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  line-height: 1.6;
-  padding: 32px 16px;
-  transition: none; /* Evita animações bruscas globais */
+  margin: 0; font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-color); color: var(--text-main);
+  line-height: 1.6; padding: 32px 16px;
 }
 
 .page { max-width: 900px; margin: 0 auto; }
 
-/* =========================================
-   Cabeçalho
-   ========================================= */
 header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-
-.logo {
-  width: 50px; height: 50px;
-  background-color: var(--accent); color: white;
-  border-radius: var(--radius);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: bold; font-size: 20px;
-}
-
-.brand h1 { margin: 0; font-size: 20px; color: var(--text-main); }
+.logo { width: 50px; height: 50px; background: var(--accent); color: white; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
+.brand h1 { margin: 0; font-size: 20px; }
 .brand p { margin: 0; font-size: 14px; color: var(--text-muted); }
 
-/* =========================================
-   Cartões (Cards)
-   ========================================= */
-.card {
-  background: var(--card-bg);
-  border-radius: var(--radius);
-  padding: var(--spacing);
-  margin-bottom: 20px;
-  border: 1px solid #E5E7EB; 
-}
+/* Cartões */
+.card { background: var(--card-bg); border-radius: var(--radius); padding: var(--spacing); margin-bottom: 20px; border: 1px solid #E5E7EB; }
 .big-card { padding: 28px; }
-
 .section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.section-title h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.section-title h2 { margin: 0; font-size: 18px; }
 .section-title small { color: var(--text-muted); font-weight: normal; }
 
-/* =========================================
-   Controles e Botões
-   ========================================= */
-.btn {
-  background-color: var(--accent); color: white;
-  border: none; padding: 10px 16px; border-radius: 8px;
-  font-size: 14px; cursor: pointer; font-weight: 500;
-  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-}
-.btn:hover { background-color: var(--accent-hover); }
-
-.btn.ghost { background-color: transparent; color: var(--text-main); border: 1px solid #D1D5DB; }
-.btn.ghost:hover { background-color: #F3F4F6; }
-
-.btn.warn { background-color: var(--danger); }
+/* Botões */
+.btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; }
+.btn:hover { background: var(--accent-hover); }
+.btn.ghost { background: transparent; color: var(--text-main); border: 1px solid #D1D5DB; }
+.btn.warn { background: var(--danger); }
 .icon-btn { padding: 10px; font-size: 18px; line-height: 1; }
 
-/* =========================================
-   CHAT & IA (Novo)
-   ========================================= */
+/* Chat */
 .chat-container { display: flex; flex-direction: column; gap: 10px; }
-
-.chat-history {
-  height: 300px;
-  overflow-y: auto;
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Balões de Mensagem */
-.message { padding: 10px 14px; border-radius: 8px; max-width: 85%; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
-.ai-msg { background: #E5E7EB; color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 2px; }
-.user-msg { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-
-/* Preview de Arquivo */
-.file-preview {
-  background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E3A8A;
-  padding: 8px 12px; border-radius: 6px; font-size: 13px;
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 5px; width: fit-content; gap: 10px;
-}
-.close-preview { background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; }
-
-/* Área de Input */
+.chat-history { height: 300px; overflow-y: auto; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.message { padding: 10px 14px; border-radius: 8px; max-width: 85%; font-size: 14px; word-wrap: break-word; }
+.ai-msg { background: #E5E7EB; align-self: flex-start; }
+.user-msg { background: var(--accent); color: white; align-self: flex-end; }
+.file-preview { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E3A8A; padding: 8px 12px; border-radius: 6px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; width: fit-content; gap: 10px; margin-bottom: 5px; }
+.close-preview { background: none; border: none; cursor: pointer; font-weight: bold; }
 .chat-input-area { display: flex; gap: 8px; margin-top: 5px; }
-.chat-input-area input[type="text"] {
-  flex: 1; padding: 10px; border: 1px solid #D1D5DB; border-radius: 8px; outline: none; font-family: inherit;
-}
+.chat-input-area input[type="text"] { flex: 1; padding: 10px; border: 1px solid #D1D5DB; border-radius: 8px; outline: none; }
 .chat-input-area input:focus { border-color: var(--accent); }
-
-/* Utilitário genérico */
 .hidden { display: none !important; }
 
-/* =========================================
-   Toggles e Medidores
-   ========================================= */
+/* Controles */
 .toggle { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; cursor: pointer; }
-
-.switch {
-  width: 48px; height: 28px; background-color: #E5E7EB;
-  border-radius: 99px; position: relative; transition: background-color 0.2s;
-}
-.knob {
-  width: 22px; height: 22px; background-color: white;
-  border-radius: 50%; position: absolute; top: 3px; left: 3px;
-  transition: transform 0.2s;
-}
-.switch.on { background-color: var(--accent); }
+.switch { width: 48px; height: 28px; background: #E5E7EB; border-radius: 99px; position: relative; transition: background 0.2s; }
+.knob { width: 22px; height: 22px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: transform 0.2s; }
+.switch.on { background: var(--accent); }
 .switch.on .knob { transform: translateX(20px); }
+.meter { height: 10px; background: #EEF2F7; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+.meter i { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }
 
-.meter { height: 10px; background-color: #EEF2F7; border-radius: 99px; overflow: hidden; margin-top: 8px; }
-.meter i { display: block; height: 100%; background-color: var(--accent); transition: width 0.3s; }
-
-/* =========================================
-   Lista de Scripts
-   ========================================= */
+/* Scripts */
 .scripts-list { display: flex; flex-direction: column; gap: 12px; }
-.script-item {
-  background-color: #F9FAFB; border: 1px solid #EEF2F7;
-  border-radius: 8px; padding: 12px;
-  display: flex; justify-content: space-between; align-items: center;
-}
-.script-item .text { font-style: italic; color: var(--text-main); }
+.script-item { background: #F9FAFB; border: 1px solid #EEF2F7; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+.script-item .text { font-style: italic; }
 
-/* =========================================
-   RODAPÉ (Footer) - Novo
-   ========================================= */
-.app-footer {
-  text-align: center;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #E5E7EB;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
+/* Footer */
+.app-footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #E5E7EB; color: var(--text-muted); font-size: 0.85rem; }
 .app-footer strong { color: var(--text-main); }
 
-/* =========================================
-   Layout & Responsividade
-   ========================================= */
-aside .card { position: sticky; top: 20px; }
-main { display: grid; gap: 20px; }
-
-@media (min-width: 768px) {
-  main { grid-template-columns: 2fr 1fr; }
+/* --- NOVO: Animação de Respiração --- */
+.breathing-container { display: flex; flex-direction: column; align-items: center; padding: 10px; }
+.circle {
+  width: 80px; height: 80px; background-color: var(--accent);
+  border-radius: 50%; opacity: 0.8;
+  animation: breathe 8s infinite ease-in-out;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; } /* Expira */
+  50% { transform: scale(1.8); opacity: 1; }      /* Inspira */
+}
+#breathText { margin-top: 15px; font-weight: bold; color: var(--text-muted); animation: textFade 8s infinite ease-in-out; }
+@keyframes textFade {
+  0%, 100% { content: "Expire..."; opacity: 0.5; }
+  50% { content: "Inspire..."; opacity: 1; }
 }
 
-/* =========================================
-   Modo Baixa Estimulação
-   ========================================= */
+/* Layout */
+main { display: grid; gap: 20px; }
+@media (min-width: 768px) { main { grid-template-columns: 2fr 1fr; } }
 body.low-stimulus { --accent: #9CA3AF; --bg-color: #F3F4F6; }
-body.low-stimulus .meter i { transition: none; }
