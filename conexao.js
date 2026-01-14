@@ -186,3 +186,49 @@ function setupMicSimulation() {
         });
     }
 }
+// Adicione isso ao final do conexao.js se ainda não tiver adicionado:
+document.addEventListener("DOMContentLoaded", () => {
+    const noiseBtn = document.getElementById("noiseBtn");
+    let audioContext = null;
+    let noiseSource = null;
+    let isPlaying = false;
+
+    if (noiseBtn) {
+        noiseBtn.addEventListener("click", () => {
+            if (!isPlaying) {
+                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const bufferSize = audioContext.sampleRate * 5; 
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                let lastOut = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    lastOut = (lastOut + (0.02 * white)) / 1.02;
+                    data[i] = lastOut * 3.5; 
+                }
+
+                noiseSource = audioContext.createBufferSource();
+                noiseSource.buffer = buffer;
+                noiseSource.loop = true;
+                
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 0.5;
+                
+                noiseSource.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                noiseSource.start();
+                isPlaying = true;
+                noiseBtn.innerText = "⏹ Parar";
+                noiseBtn.classList.add("warn");
+            } else {
+                if (noiseSource) noiseSource.stop();
+                isPlaying = false;
+                noiseBtn.innerText = "▶ Tocar";
+                noiseBtn.classList.remove("warn");
+            }
+        });
+    }
+});
