@@ -63,10 +63,30 @@
 
         <article class="card">
           <div class="section-title">
+            <h2>Tradutor Social</h2>
+            <small>De direto para polido</small>
+          </div>
+          
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <label style="font-size:12px; color:var(--text-muted)">Sua intenção (Direta):</label>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="rawInput" placeholder="Ex: Não vou, estou cansado." style="flex:1; padding:10px; border-radius:8px; border:1px solid #D1D5DB; outline:none;">
+              <button class="btn" id="translateBtn">✨ Suavizar</button>
+            </div>
+
+            <div id="politeResult" class="hidden" style="background:#F0FDF4; border:1px solid #BBF7D0; padding:15px; border-radius:8px; margin-top:10px;">
+              <label style="font-size:12px; color:#166534; font-weight:bold;">Sugestão:</label>
+              <p id="translatedText" style="margin:5px 0; font-style:italic; color:#14532D;"></p>
+              <button class="btn ghost" style="font-size:12px; padding:5px 10px; background:white;" onclick="copiarTraducao()">Copiar</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="section-title">
             <h2>Scripts Rápidos</h2>
           </div>
-          <div class="scripts-list" id="scriptsList">
-            </div>
+          <div class="scripts-list" id="scriptsList"></div>
         </article>
 
         <article class="card">
@@ -99,7 +119,7 @@
       <aside>
         <div class="card">
           <h3>Privacidade</h3>
-          <p>O backend processa imagens na memória e salva textos no banco local (SQLite).</p>
+          <p>Trabalhamos com o mínimo de coleta de dados para preservar a integridade do usuário e evitar respostas tendenciosas.</p>
           <button class="btn warn" style="margin-top:10px; width:100%">Limpar Dados Locais</button>
         </div>
       </aside>

@@ -41,3 +41,29 @@ def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None) -> str:
     except Exception as e:
         print(f"Erro OpenAI: {e}")
         return "Tive uma dificuldade técnica para processar isso agora."
+
+def suavizar_texto_gpt(texto: str) -> str:
+    """Reescreve textos diretos para torná-los polidos e sociais."""
+    if not client.api_key:
+        return "Erro: API Key não configurada."
+
+    system_prompt = (
+        "Você é um especialista em comunicação social e etiqueta brasileira. "
+        "Sua função é receber frases curtas, diretas ou 'secas' (comuns em neurodivergentes) "
+        "e reescrevê-las de forma educada, empática e profissional, mantendo o significado original. "
+        "Dê apenas a frase reescrita, sem explicações extras."
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Suavize esta frase: '{texto}'"}
+            ],
+            max_tokens=150
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"Erro OpenAI: {e}")
+        return "Não consegui suavizar o texto agora."

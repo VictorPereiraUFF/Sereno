@@ -4,15 +4,16 @@ from fastapi import FastAPI, Depends, Body # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from sqlmodel import SQLModel, create_engine, Session, select # type: ignore
 
-# --- IMPORTAÇÕES LOCAIS (A Mágica acontece aqui) ---
-from models import User, Script, ChatRequest # type: ignore
-from services import gerar_resposta_gpt # type: ignore
+# --- IMPORTAÇÕES LOCAIS ---
+# Certifique-se de que models.py está na mesma pasta
+from models import User, Script, ChatRequest
+from services import gerar_resposta_gpt, suavizar_texto_gpt
 
 # ---------- CONFIGURAÇÕES ----------
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sereno.db")
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
-app = FastAPI(title="Sereno Backend", version="0.2.0")
+app = FastAPI(title="Sereno Backend", version="0.3.0")
 
 # CORS
 app.add_middleware(
@@ -31,7 +32,6 @@ def get_session():
     with Session(engine) as session:
         yield session
 
-# Cria tabelas ao iniciar (idealmente usar 'lifespan', mas assim funciona para agora)
 create_db_and_tables()
 
 # ---------- ROTAS ----------
@@ -40,21 +40,25 @@ create_db_and_tables()
 def home():
     return {"status": "Sereno Backend Online", "db": "Active"}
 
-# Rota de IA (Usa a função importada de services.py)
+# Rota de IA (Chat Geral)
 @app.post("/api/ia")
 def chat_endpoint(payload: ChatRequest):
     resposta = gerar_resposta_gpt(payload.texto, payload.imagem)
     return {"resposta": resposta}
 
-# Rota de Scripts (Usa os modelos importados de models.py)
+# Rota de IA (Tradutor de Polidez) - NOVO
+@app.post("/api/suavizar")
+def endpoint_suavizar(payload: ChatRequest):
+    # Reutilizamos o modelo ChatRequest pois ele já tem o campo 'texto'
+    resultado = suavizar_texto_gpt(payload.texto)
+    return {"revisado": resultado}
+
+# Rotas de Scripts
 @app.get("/scripts")
 def list_scripts(session: Session = Depends(get_session)):
     scripts = session.exec(select(Script)).all()
     if not scripts:
-        return [
-            {"message": "Preciso de um minuto."},
-            {"message": "O barulho está alto."}
-        ]
+        return []
     return scripts
 
 @app.post("/scripts")

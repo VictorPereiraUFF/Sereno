@@ -6,8 +6,10 @@ const API_URL = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
     setupMicSimulation();
-    loadScripts(); // Carrega scripts (online ou fallback offline)
+    loadScripts();
     setupChat();
+    setupTranslator(); // <--- Novo Tradutor
+    setupBrownNoise(); // <--- Ruído Marrom (organizado em função)
 });
 
 // ===============================
@@ -16,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadScripts() {
     const container = document.getElementById("scriptsList");
     
-    // Função auxiliar para criar HTML
     const renderScript = (msg) => {
         const item = document.createElement("div");
         item.className = "script-item";
@@ -31,7 +32,6 @@ async function loadScripts() {
     };
 
     try {
-        // Tenta buscar do backend
         const res = await fetch(`${API_URL}/scripts`);
         if(!res.ok) throw new Error("Offline");
         
@@ -44,8 +44,6 @@ async function loadScripts() {
     } catch (e) {
         console.warn("Backend offline. Carregando scripts de emergência.");
         container.innerHTML = "";
-        
-        // --- Scripts Offline (Funcionam sempre) ---
         const scriptsLocais = [
             "Preciso de um minuto para processar isso.",
             "O ambiente está muito barulhento para mim.",
@@ -57,7 +55,6 @@ async function loadScripts() {
     }
 }
 
-// Fala Global
 window.falarTexto = function(texto) {
     const utterance = new SpeechSynthesisUtterance(texto);
     utterance.lang = "pt-BR";
@@ -125,7 +122,7 @@ function setupChat() {
             const data = await res.json();
             loadingDiv.innerText = data.resposta;
         } catch (e) {
-            loadingDiv.innerText = "Erro: Servidor não respondeu. Verifique se o Python está rodando.";
+            loadingDiv.innerText = "Erro: Servidor offline.";
         }
     }
 
@@ -145,49 +142,56 @@ function setupChat() {
 }
 
 // ===============================
-// 3. Simulação Sensores
+// 3. Tradutor de Intenção (Novo)
 // ===============================
-function setupMicSimulation() {
-    const micSwitch = document.getElementById('micSwitch');
-    const levelPct = document.getElementById('levelPct');
-    const soundBar = document.getElementById('soundLevel');
-    const logCount = document.getElementById('logCount');
-    let logs = 0;
-    let simLevel = 8;
+function setupTranslator() {
+    const rawInput = document.getElementById("rawInput");
+    const translateBtn = document.getElementById("translateBtn");
+    const resultBox = document.getElementById("politeResult");
+    const resultText = document.getElementById("translatedText");
 
-    if(micSwitch) {
-        micSwitch.parentElement.addEventListener('click', () => {
-            micSwitch.classList.toggle('on');
-        });
+    if(translateBtn) {
+        translateBtn.addEventListener("click", async () => {
+            const texto = rawInput.value.trim();
+            if(!texto) return;
 
-        setInterval(() => {
-            if (micSwitch.classList.contains('on')) {
-                simLevel = Math.min(100, Math.max(0, simLevel + (Math.random() * 20 - 10)));
-                if(levelPct) levelPct.textContent = Math.round(simLevel) + '%';
-                if(soundBar) soundBar.style.width = simLevel + '%';
+            translateBtn.innerText = "⏳ ...";
+            translateBtn.disabled = true;
 
-                if (simLevel > 85) {
-                    logs++;
-                    if(logCount) logCount.textContent = logs;
-                    fetch(`${API_URL}/events`, {
-                        method: "POST", 
-                        headers: {"Content-Type": "application/json"},
-                        body: JSON.stringify({type: "som_alto", value: simLevel})
-                    }).catch(()=>{});
-                }
+            try {
+                const res = await fetch(`${API_URL}/api/suavizar`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ texto: texto })
+                });
+                const data = await res.json();
+                
+                resultText.innerText = data.revisado;
+                resultBox.classList.remove("hidden");
+            } catch (e) {
+                alert("Erro ao conectar com a IA.");
+            } finally {
+                translateBtn.innerText = "✨ Suavizar";
+                translateBtn.disabled = false;
             }
-        }, 800);
-    }
-
-    const lowStimBtn = document.getElementById('lowStimBtn');
-    if(lowStimBtn) {
-        lowStimBtn.addEventListener('click', () => {
-            document.body.classList.toggle('low-stimulus');
         });
     }
+
+    if(rawInput) rawInput.addEventListener("keypress", (e) => {
+        if(e.key === "Enter") translateBtn.click();
+    });
 }
-// Adicione isso ao final do conexao.js se ainda não tiver adicionado:
-document.addEventListener("DOMContentLoaded", () => {
+
+window.copiarTraducao = function() {
+    const texto = document.getElementById("translatedText").innerText;
+    navigator.clipboard.writeText(texto);
+    alert("Copiado!");
+};
+
+// ===============================
+// 4. Ruído Marrom (Brown Noise)
+// ===============================
+function setupBrownNoise() {
     const noiseBtn = document.getElementById("noiseBtn");
     let audioContext = null;
     let noiseSource = null;
@@ -231,4 +235,47 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-});
+}
+
+// ===============================
+// 5. Simulação Sensores
+// ===============================
+function setupMicSimulation() {
+    const micSwitch = document.getElementById('micSwitch');
+    const levelPct = document.getElementById('levelPct');
+    const soundBar = document.getElementById('soundLevel');
+    const logCount = document.getElementById('logCount');
+    let logs = 0;
+    let simLevel = 8;
+
+    if(micSwitch) {
+        micSwitch.parentElement.addEventListener('click', () => {
+            micSwitch.classList.toggle('on');
+        });
+
+        setInterval(() => {
+            if (micSwitch.classList.contains('on')) {
+                simLevel = Math.min(100, Math.max(0, simLevel + (Math.random() * 20 - 10)));
+                if(levelPct) levelPct.textContent = Math.round(simLevel) + '%';
+                if(soundBar) soundBar.style.width = simLevel + '%';
+
+                if (simLevel > 85) {
+                    logs++;
+                    if(logCount) logCount.textContent = logs;
+                    fetch(`${API_URL}/events`, {
+                        method: "POST", 
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({type: "som_alto", value: simLevel})
+                    }).catch(()=>{});
+                }
+            }
+        }, 800);
+    }
+
+    const lowStimBtn = document.getElementById('lowStimBtn');
+    if(lowStimBtn) {
+        lowStimBtn.addEventListener('click', () => {
+            document.body.classList.toggle('low-stimulus');
+        });
+    }
+}
