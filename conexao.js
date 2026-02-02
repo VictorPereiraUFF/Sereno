@@ -5,15 +5,67 @@
 const API_URL = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
+    setupBattery();     // <--- NOVA FUNÇÃO
     setupMicSimulation();
     loadScripts();
     setupChat();
-    setupTranslator(); // <--- Novo Tradutor
-    setupBrownNoise(); // <--- Ruído Marrom (organizado em função)
+    setupTranslator();
+    setupBrownNoise();
 });
 
 // ===============================
-// 1. Scripts Sociais (Híbrido)
+// 0. Bateria Social (NOVO)
+// ===============================
+function setupBattery() {
+    const slider = document.getElementById("socialBattery");
+    const icon = document.getElementById("batteryIcon");
+    const pct = document.getElementById("batteryPct");
+    const advice = document.getElementById("batteryAdvice");
+
+    if (!slider) return;
+
+    // Atualização Visual Instantânea
+    slider.addEventListener("input", () => {
+        const val = parseInt(slider.value);
+        pct.innerText = val + "%";
+        
+        // Muda o emoji baseado no valor
+        if (val > 80) icon.innerText = "⚡";      // Muita energia
+        else if (val > 40) icon.innerText = "🔋"; // Normal
+        else if (val > 20) icon.innerText = "🪫"; // Baixa
+        else icon.innerText = "💀";               // Crítica
+    });
+
+    // Salvar no Backend apenas quando soltar o mouse (evita flood)
+    slider.addEventListener("change", async () => {
+        const val = parseInt(slider.value);
+        advice.innerText = "Salvando...";
+
+        try {
+            const res = await fetch(`${API_URL}/api/battery`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ level: val })
+            });
+            const data = await res.json();
+            
+            // Mostra sugestão do backend
+            advice.innerText = data.message;
+
+            // Se for muito baixo, sugere visualmente o modo escuro
+            if (val <= 20) {
+               const confirmLow = confirm("Sua bateria social está crítica. Deseja ativar o modo Baixa Estimulação?");
+               if(confirmLow) document.body.classList.add('low-stimulus');
+            }
+
+        } catch (e) {
+            advice.innerText = "Erro ao salvar status.";
+        }
+    });
+}
+
+// ===============================
+// 1. Scripts Sociais
 // ===============================
 async function loadScripts() {
     const container = document.getElementById("scriptsList");
@@ -42,12 +94,11 @@ async function loadScripts() {
         scripts.forEach(s => renderScript(s.message));
 
     } catch (e) {
-        console.warn("Backend offline. Carregando scripts de emergência.");
+        // Scripts de emergência caso offline
         container.innerHTML = "";
         const scriptsLocais = [
             "Preciso de um minuto para processar isso.",
             "O ambiente está muito barulhento para mim.",
-            "Poderia repetir mais devagar, por favor?",
             "Prefiro continuar essa conversa por texto.",
             "Não estou me sentindo bem, preciso sair."
         ];
@@ -142,7 +193,7 @@ function setupChat() {
 }
 
 // ===============================
-// 3. Tradutor de Intenção (Novo)
+// 3. Tradutor de Intenção
 // ===============================
 function setupTranslator() {
     const rawInput = document.getElementById("rawInput");

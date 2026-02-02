@@ -4,19 +4,31 @@ from datetime import datetime
 from sqlmodel import SQLModel, Field # type: ignore
 from pydantic import BaseModel # type: ignore
 
-# --- Modelos do Banco de Dados ---
+# Tabela de Usuários (Base)
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(index=True, unique=True)
     hashed_password: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Tabela de Scripts
 class Script(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     owner_id: Optional[int] = Field(default=None, foreign_key="user.id")
     message: str
 
-# --- Modelos de Requisição (API) ---
+# Tabela de Bateria Social (NOVO)
+class SocialBattery(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    level: int # 0 a 100
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+# --- Schemas de Comunicação (Pydantic) ---
+# Usados para receber dados do Frontend (JSON)
+
 class ChatRequest(BaseModel):
     texto: str
     imagem: Optional[str] = None
+
+class BatteryRequest(BaseModel):
+    level: int
