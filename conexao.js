@@ -5,7 +5,8 @@
 const API_URL = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
-    setupBattery();     // <--- NOVA FUNÇÃO
+    setupTheme();       // <--- TEMA ESCURO
+    setupBattery();     
     setupMicSimulation();
     loadScripts();
     setupChat();
@@ -14,7 +15,37 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===============================
-// 0. Bateria Social (NOVO)
+// -1. Modo Escuro (NOVO)
+// ===============================
+function setupTheme() {
+    const themeBtn = document.getElementById("themeBtn");
+    
+    // 1. Verifica se o usuário já escolheu antes (memória local)
+    const savedTheme = localStorage.getItem("sereno_theme");
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark-mode");
+        themeBtn.innerText = "☀️"; // Muda ícone para Sol
+    }
+
+    // 2. Clique no botão
+    if (themeBtn) {
+        themeBtn.addEventListener("click", () => {
+            document.body.classList.toggle("dark-mode");
+            
+            // Salva a escolha e muda ícone
+            if (document.body.classList.contains("dark-mode")) {
+                localStorage.setItem("sereno_theme", "dark");
+                themeBtn.innerText = "☀️";
+            } else {
+                localStorage.setItem("sereno_theme", "light");
+                themeBtn.innerText = "🌙";
+            }
+        });
+    }
+}
+
+// ===============================
+// 0. Bateria Social
 // ===============================
 function setupBattery() {
     const slider = document.getElementById("socialBattery");
@@ -24,19 +55,16 @@ function setupBattery() {
 
     if (!slider) return;
 
-    // Atualização Visual Instantânea
     slider.addEventListener("input", () => {
         const val = parseInt(slider.value);
         pct.innerText = val + "%";
         
-        // Muda o emoji baseado no valor
-        if (val > 80) icon.innerText = "⚡";      // Muita energia
-        else if (val > 40) icon.innerText = "🔋"; // Normal
-        else if (val > 20) icon.innerText = "🪫"; // Baixa
-        else icon.innerText = "💀";               // Crítica
+        if (val > 80) icon.innerText = "⚡";      
+        else if (val > 40) icon.innerText = "🔋"; 
+        else if (val > 20) icon.innerText = "🪫"; 
+        else icon.innerText = "💀";               
     });
 
-    // Salvar no Backend apenas quando soltar o mouse (evita flood)
     slider.addEventListener("change", async () => {
         const val = parseInt(slider.value);
         advice.innerText = "Salvando...";
@@ -49,10 +77,8 @@ function setupBattery() {
             });
             const data = await res.json();
             
-            // Mostra sugestão do backend
             advice.innerText = data.message;
 
-            // Se for muito baixo, sugere visualmente o modo escuro
             if (val <= 20) {
                const confirmLow = confirm("Sua bateria social está crítica. Deseja ativar o modo Baixa Estimulação?");
                if(confirmLow) document.body.classList.add('low-stimulus');
@@ -94,7 +120,6 @@ async function loadScripts() {
         scripts.forEach(s => renderScript(s.message));
 
     } catch (e) {
-        // Scripts de emergência caso offline
         container.innerHTML = "";
         const scriptsLocais = [
             "Preciso de um minuto para processar isso.",

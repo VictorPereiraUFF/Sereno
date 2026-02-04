@@ -1,19 +1,46 @@
 /* =========================================
-   SERENO — Estilo Sensorial (Low Stimulus)
+   SERENO — Estilo Sensorial (Low Stimulus & Dark Mode)
    ========================================= */
 
 :root {
+  /* Padrão (Claro) */
   --bg-color: #F6F8FA;      
   --card-bg: #FFFFFF;
   --text-main: #2D3748;      
   --text-muted: #6B7280;     
+  --border-color: #E5E7EB;
+  --input-bg: #FFFFFF;
   
   --accent: #71D1B3;         /* Verde Água */
   --accent-hover: #5EBE9F;   
-  --danger: #EF4444;         
+  --danger: #EF4444;    
+
+  /* Variáveis extras para Dark Mode e Estados */
+  --ai-msg-bg: #E5E7EB;
+  --script-bg: #F9FAFB;
+  --success-bg: #F0FDF4;
+  --success-border: #BBF7D0;
+  --success-text: #14532D;
   
   --radius: 12px;
   --spacing: 20px;
+}
+
+/* --- MODO ESCURO (Overrides) --- */
+body.dark-mode {
+  --bg-color: #121212;
+  --card-bg: #1E1E1E;
+  --text-main: #E2E8F0;
+  --text-muted: #A0AEC0;
+  --border-color: #2D3748;
+  --input-bg: #2D2D2D;
+
+  --ai-msg-bg: #2D3748;
+  --script-bg: #2D2D2D;
+  
+  --success-bg: #064E3B;
+  --success-border: #065F46;
+  --success-text: #A7F3D0;
 }
 
 * { box-sizing: border-box; }
@@ -21,71 +48,66 @@
 body {
   margin: 0; font-family: 'Inter', system-ui, sans-serif;
   background-color: var(--bg-color); color: var(--text-main);
-  line-height: 1.6; padding: 32px 16px;
+  line-height: 1.6; padding: 32px 16px; transition: background-color 0.3s, color 0.3s;
 }
 
 .page { max-width: 900px; margin: 0 auto; }
 
-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-.logo { width: 50px; height: 50px; background: var(--accent); color: white; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
+header { display: flex; align-items: center; margin-bottom: 24px; }
+.logo { width: 50px; height: 50px; background: var(--accent); color: white; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; margin-right: 16px; }
 .brand h1 { margin: 0; font-size: 20px; }
 .brand p { margin: 0; font-size: 14px; color: var(--text-muted); }
 
 /* Cartões */
-.card { background: var(--card-bg); border-radius: var(--radius); padding: var(--spacing); margin-bottom: 20px; border: 1px solid #E5E7EB; }
+.card { background: var(--card-bg); border-radius: var(--radius); padding: var(--spacing); margin-bottom: 20px; border: 1px solid var(--border-color); }
 .big-card { padding: 28px; }
 .section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .section-title h2 { margin: 0; font-size: 18px; }
 .section-title small { color: var(--text-muted); font-weight: normal; }
 
 /* Botões */
-.btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; }
+.btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; transition: background 0.2s; }
 .btn:hover { background: var(--accent-hover); }
-.btn.ghost { background: transparent; color: var(--text-main); border: 1px solid #D1D5DB; }
+.btn.ghost { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
 .btn.warn { background: var(--danger); }
 .icon-btn { padding: 10px; font-size: 18px; line-height: 1; }
 
 /* Chat */
 .chat-container { display: flex; flex-direction: column; gap: 10px; }
-.chat-history { height: 300px; overflow-y: auto; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.chat-history { height: 300px; overflow-y: auto; background: var(--script-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .message { padding: 10px 14px; border-radius: 8px; max-width: 85%; font-size: 14px; word-wrap: break-word; }
-.ai-msg { background: #E5E7EB; align-self: flex-start; }
+.ai-msg { background: var(--ai-msg-bg); align-self: flex-start; }
 .user-msg { background: var(--accent); color: white; align-self: flex-end; }
-.file-preview { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E3A8A; padding: 8px 12px; border-radius: 6px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; width: fit-content; gap: 10px; margin-bottom: 5px; }
-.close-preview { background: none; border: none; cursor: pointer; font-weight: bold; }
+
 .chat-input-area { display: flex; gap: 8px; margin-top: 5px; }
-.chat-input-area input[type="text"] { flex: 1; padding: 10px; border: 1px solid #D1D5DB; border-radius: 8px; outline: none; }
+.chat-input-area input[type="text"] { flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; background: var(--input-bg); color: var(--text-main); }
 .chat-input-area input:focus { border-color: var(--accent); }
 .hidden { display: none !important; }
 
 /* Controles */
 .toggle { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; cursor: pointer; }
-.switch { width: 48px; height: 28px; background: #E5E7EB; border-radius: 99px; position: relative; transition: background 0.2s; }
+.switch { width: 48px; height: 28px; background: var(--border-color); border-radius: 99px; position: relative; transition: background 0.2s; }
 .knob { width: 22px; height: 22px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: transform 0.2s; }
 .switch.on { background: var(--accent); }
 .switch.on .knob { transform: translateX(20px); }
-.meter { height: 10px; background: #EEF2F7; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+.meter { height: 10px; background: var(--border-color); border-radius: 99px; overflow: hidden; margin-top: 8px; }
 .meter i { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }
 
 /* Scripts */
 .scripts-list { display: flex; flex-direction: column; gap: 12px; }
-.script-item { background: #F9FAFB; border: 1px solid #EEF2F7; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+.script-item { background: var(--script-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
 .script-item .text { font-style: italic; }
 
 /* Footer */
-.app-footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #E5E7EB; color: var(--text-muted); font-size: 0.85rem; }
+.app-footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.85rem; }
 .app-footer strong { color: var(--text-main); }
 
-/* --- NOVO: Animação de Respiração --- */
+/* Animação de Respiração */
 .breathing-container { display: flex; flex-direction: column; align-items: center; padding: 10px; }
-.circle {
-  width: 80px; height: 80px; background-color: var(--accent);
-  border-radius: 50%; opacity: 0.8;
-  animation: breathe 8s infinite ease-in-out;
-}
+.circle { width: 80px; height: 80px; background-color: var(--accent); border-radius: 50%; opacity: 0.8; animation: breathe 8s infinite ease-in-out; }
 @keyframes breathe {
-  0%, 100% { transform: scale(1); opacity: 0.6; } /* Expira */
-  50% { transform: scale(1.8); opacity: 1; }      /* Inspira */
+  0%, 100% { transform: scale(1); opacity: 0.6; } 
+  50% { transform: scale(1.8); opacity: 1; }      
 }
 #breathText { margin-top: 15px; font-weight: bold; color: var(--text-muted); animation: textFade 8s infinite ease-in-out; }
 @keyframes textFade {
@@ -96,4 +118,4 @@ header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
 /* Layout */
 main { display: grid; gap: 20px; }
 @media (min-width: 768px) { main { grid-template-columns: 2fr 1fr; } }
-body.low-stimulus { --accent: #9CA3AF; --bg-color: #F3F4F6; }
+body.low-stimulus { --accent: #9CA3AF; }
