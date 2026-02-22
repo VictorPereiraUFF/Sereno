@@ -1,22 +1,20 @@
 # main.py
-import os
 from fastapi import FastAPI, Depends, Body # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
-from sqlmodel import SQLModel, create_engine, Session, select # type: ignore
-from datetime import datetime
+from sqlmodel import Session, select # type: ignore
 
 # --- IMPORTAÇÕES LOCAIS ---
-# Importamos as tabelas e schemas do models.py
+# 1. Importamos o gerenciamento do banco
+from database import create_db_and_tables, get_session
+# 2. Importamos os modelos (tabelas e dados)
 from models import User, Script, SocialBattery, ChatRequest, BatteryRequest
+# 3. Importamos as funções de IA
 from services import gerar_resposta_gpt, suavizar_texto_gpt
 
-# ---------- CONFIGURAÇÕES ----------
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./sereno.db")
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# ---------- CONFIGURAÇÕES DO APP ----------
+app = FastAPI(title="Sereno Backend", version="0.5.0")
 
-app = FastAPI(title="Sereno Backend", version="0.4.0")
-
-# CORS
+# CORS (Permite que o HTML converse com o Python)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,15 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------- BANCO DE DADOS ----------
-def create_db_and_tables():
-    SQLModel.metadata.create_all(engine)
-
-def get_session():
-    with Session(engine) as session:
-        yield session
-
-# Cria as tabelas ao iniciar (incluindo a nova SocialBattery)
+# Cria as tabelas ao iniciar usando a função importada
 create_db_and_tables()
 
 # ---------- ROTAS ----------
@@ -54,15 +44,13 @@ def endpoint_suavizar(payload: ChatRequest):
     resultado = suavizar_texto_gpt(payload.texto)
     return {"revisado": resultado}
 
-# Rota de Bateria Social (NOVO)
+# Rota de Bateria Social
 @app.post("/api/battery")
 def log_battery(payload: BatteryRequest, session: Session = Depends(get_session)):
-    # 1. Salva no banco
     novo_registro = SocialBattery(level=payload.level)
     session.add(novo_registro)
     session.commit()
     
-    # 2. Lógica de resposta inteligente
     sugestao = ""
     if payload.level <= 20:
         sugestao = "Bateria crítica. Ativando recomendações de descanso."
@@ -73,9 +61,10 @@ def log_battery(payload: BatteryRequest, session: Session = Depends(get_session)
 
     return {"status": "saved", "message": sugestao}
 
-# Rota para pegar histórico da bateria (Opcional, para gráfico futuro)
+# Rota para pegar histórico da bateria
 @app.get("/api/battery/history")
 def get_battery_history(session: Session = Depends(get_session)):
+    # Requer importação do select no topo
     statement = select(SocialBattery).order_by(SocialBattery.timestamp.desc()).limit(10)
     results = session.exec(statement).all()
     return results
@@ -101,6 +90,7 @@ def log_event(payload: dict = Body(...)):
     print(f"Evento recebido: {payload}")
     return {"status": "logged"}
 
+# ---------- INICIALIZAÇÃO ----------
 if __name__ == "__main__":
     import uvicorn # type: ignore
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
