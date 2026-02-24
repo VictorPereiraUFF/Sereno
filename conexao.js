@@ -5,7 +5,7 @@
 const API_URL = "http://localhost:8000";
 
 document.addEventListener("DOMContentLoaded", () => {
-    setupTheme();       // <--- TEMA ESCURO
+    setupTheme();       
     setupBattery();     
     setupMicSimulation();
     loadScripts();
@@ -15,24 +15,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ===============================
-// -1. Modo Escuro (NOVO)
+// -1. Modo Escuro
 // ===============================
 function setupTheme() {
     const themeBtn = document.getElementById("themeBtn");
-    
-    // 1. Verifica se o usuário já escolheu antes (memória local)
     const savedTheme = localStorage.getItem("sereno_theme");
+    
     if (savedTheme === "dark") {
         document.body.classList.add("dark-mode");
-        themeBtn.innerText = "☀️"; // Muda ícone para Sol
+        themeBtn.innerText = "☀️";
     }
 
-    // 2. Clique no botão
     if (themeBtn) {
         themeBtn.addEventListener("click", () => {
             document.body.classList.toggle("dark-mode");
-            
-            // Salva a escolha e muda ícone
             if (document.body.classList.contains("dark-mode")) {
                 localStorage.setItem("sereno_theme", "dark");
                 themeBtn.innerText = "☀️";
@@ -79,7 +75,7 @@ function setupBattery() {
             
             advice.innerText = data.message;
 
-            if (val <= 20) {
+            if (val <= 20 && !document.body.classList.contains('low-stimulus')) {
                const confirmLow = confirm("Sua bateria social está crítica. Deseja ativar o modo Baixa Estimulação?");
                if(confirmLow) document.body.classList.add('low-stimulus');
             }
@@ -91,11 +87,39 @@ function setupBattery() {
 }
 
 // ===============================
+// 0.5 Avaliador de Energia IA (NOVO)
+// ===============================
+async function analisarEnergiaViaIA(texto) {
+    if(!texto) return;
+    
+    const advice = document.getElementById("batteryAdvice");
+    if(advice) advice.innerText = "✨ IA calculando sua energia...";
+
+    try {
+        const res = await fetch(`${API_URL}/api/bateria/calcular`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ texto: texto })
+        });
+        const data = await res.json();
+        const novoNivel = data.nivel_estimado;
+
+        const slider = document.getElementById("socialBattery");
+        if(slider) {
+            slider.value = novoNivel;
+            slider.dispatchEvent(new Event('input'));
+            slider.dispatchEvent(new Event('change'));
+        }
+    } catch (e) {
+        console.error("Erro na leitura inteligente da bateria.", e);
+    }
+}
+
+// ===============================
 // 1. Scripts Sociais
 // ===============================
 async function loadScripts() {
     const container = document.getElementById("scriptsList");
-    
     const renderScript = (msg) => {
         const item = document.createElement("div");
         item.className = "script-item";
@@ -112,13 +136,11 @@ async function loadScripts() {
     try {
         const res = await fetch(`${API_URL}/scripts`);
         if(!res.ok) throw new Error("Offline");
-        
         const scripts = await res.json();
         if (scripts.length === 0) throw new Error("Lista vazia");
 
         container.innerHTML = "";
         scripts.forEach(s => renderScript(s.message));
-
     } catch (e) {
         container.innerHTML = "";
         const scriptsLocais = [
@@ -178,6 +200,9 @@ function setupChat() {
         const text = userTextInput.value.trim();
         if (!text && !selectedFileBase64) return;
 
+        // CHAMA A IA PARA LER A BATERIA AQUI!
+        analisarEnergiaViaIA(text);
+
         let userHtml = text;
         if(selectedFileBase64) userHtml += " <br><small>📎 [Imagem]</small>";
         appendMessage(userHtml, true);
@@ -230,6 +255,9 @@ function setupTranslator() {
         translateBtn.addEventListener("click", async () => {
             const texto = rawInput.value.trim();
             if(!texto) return;
+
+            // CHAMA A IA PARA LER A BATERIA AQUI!
+            analisarEnergiaViaIA(texto);
 
             translateBtn.innerText = "⏳ ...";
             translateBtn.disabled = true;

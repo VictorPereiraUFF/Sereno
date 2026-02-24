@@ -4,15 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from sqlmodel import Session, select # type: ignore
 
 # --- IMPORTAÇÕES LOCAIS ---
-# 1. Importamos o gerenciamento do banco
 from database import create_db_and_tables, get_session
-# 2. Importamos os modelos (tabelas e dados)
 from models import User, Script, SocialBattery, ChatRequest, BatteryRequest
-# 3. Importamos as funções de IA
-from services import gerar_resposta_gpt, suavizar_texto_gpt
+from services import gerar_resposta_gpt, suavizar_texto_gpt, calcular_bateria_social_gpt
 
 # ---------- CONFIGURAÇÕES DO APP ----------
-app = FastAPI(title="Sereno Backend", version="0.5.0")
+app = FastAPI(title="Sereno Backend", version="0.6.0")
 
 # CORS (Permite que o HTML converse com o Python)
 app.add_middleware(
@@ -44,7 +41,13 @@ def endpoint_suavizar(payload: ChatRequest):
     resultado = suavizar_texto_gpt(payload.texto)
     return {"revisado": resultado}
 
-# Rota de Bateria Social
+# Rota de Cálculo Inteligente de Bateria (NOVO)
+@app.post("/api/bateria/calcular")
+def calcular_energia_endpoint(payload: ChatRequest):
+    nivel_calculado = calcular_bateria_social_gpt(payload.texto)
+    return {"nivel_estimado": nivel_calculado}
+
+# Rota de Bateria Social Manual
 @app.post("/api/battery")
 def log_battery(payload: BatteryRequest, session: Session = Depends(get_session)):
     novo_registro = SocialBattery(level=payload.level)
@@ -64,7 +67,6 @@ def log_battery(payload: BatteryRequest, session: Session = Depends(get_session)
 # Rota para pegar histórico da bateria
 @app.get("/api/battery/history")
 def get_battery_history(session: Session = Depends(get_session)):
-    # Requer importação do select no topo
     statement = select(SocialBattery).order_by(SocialBattery.timestamp.desc()).limit(10)
     results = session.exec(statement).all()
     return results
