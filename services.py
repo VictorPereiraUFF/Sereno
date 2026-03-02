@@ -6,14 +6,14 @@ from typing import Optional
 
 # 1. Configuração da Chave da API do Google Gemini
 # Coloque sua chave aqui dentro das aspas, ex: "AIzaSy..."
-CHAVE_GEMINI = os.getenv("GEMINI_API_KEY", "COLE_SUA_CHAVE_AQUI")
+CHAVE_GEMINI = os.getenv("GEMINI_API_KEY", "AIzaSyB5CTfhRTDsTVeS0DOPd6rAVErrNCWUuD4")
 genai.configure(api_key=CHAVE_GEMINI)
 
 # 2. Funções (Mantivemos os nomes originais para não quebrar o main.py)
 
 def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None) -> str:
     """Processa texto e imagem usando Gemini 1.5 Flash."""
-    if CHAVE_GEMINI == "COLE_SUA_CHAVE_AQUI":
+    if CHAVE_GEMINI == "AIzaSyB5CTfhRTDsTVeS0DOPd6rAVErrNCWUuD4":
         return "Erro: Você esqueceu de colocar sua chave do Gemini no arquivo services.py!"
 
     system_prompt = (
