@@ -385,7 +385,7 @@ function setupMicSimulation() {
 }
 
 async function buscarConselhoIA(nivelBateria) {
-    const webhookURL = "SUA_URL_DO_MAKE_AQUI"; // COLE A URL DO WEBHOOK AQUI
+    const webhookURL = "https://hook.us2.make.com/tbv3xye5m0pyhip99903cqal8q85ihon"; // COLE A URL DO WEBHOOK AQUI
 
     // Opcional: Mostrar um "Carregando..." na interface
     const campoTexto = document.getElementById('batteryAdvice'); // Verifique se o ID está correto no seu HTML
