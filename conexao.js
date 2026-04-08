@@ -383,3 +383,30 @@ function setupMicSimulation() {
         });
     }
 }
+
+async function buscarConselhoIA(nivelBateria) {
+    const webhookURL = "SUA_URL_DO_MAKE_AQUI"; // COLE A URL DO WEBHOOK AQUI
+
+    // Opcional: Mostrar um "Carregando..." na interface
+    const campoTexto = document.getElementById('batteryAdvice'); // Verifique se o ID está correto no seu HTML
+    if (campoTexto) campoTexto.innerText = "Consultando o Sereno Engine...";
+
+    try {
+        const response = await fetch(webhookURL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nivel: nivelBateria })
+        });
+
+        const data = await response.json();
+        
+        if (campoTexto) {
+            campoTexto.innerText = data.conselho;
+        }
+        return data.conselho;
+
+    } catch (error) {
+        console.error("Erro na automação:", error);
+        if (campoTexto) campoTexto.innerText = "Tire um momento para relaxar.";
+    }
+}
