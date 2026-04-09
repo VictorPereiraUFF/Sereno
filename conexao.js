@@ -66,22 +66,25 @@ function setupBattery() {
         advice.innerText = "Salvando...";
 
         try {
-            const res = await fetch(`${API_URL}/api/battery`, {
+            // 1. Mantém salvando no seu backend Python local (histórico)
+            await fetch(`${API_URL}/api/battery`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ level: val })
             });
-            const data = await res.json();
             
-            advice.innerText = data.message;
+            // 2. AQUI ESTÁ A MUDANÇA: Chama o Make para gerar o conselho inteligente!
+            buscarConselhoIA(val);
 
+            // 3. Mantém a sua lógica do modo de baixa estimulação
             if (val <= 20 && !document.body.classList.contains('low-stimulus')) {
                const confirmLow = confirm("Sua bateria social está crítica. Deseja ativar o modo Baixa Estimulação?");
                if(confirmLow) document.body.classList.add('low-stimulus');
             }
 
         } catch (e) {
-            advice.innerText = "Erro ao salvar status.";
+            advice.innerText = "Erro ao conectar. Tente relaxar um pouco.";
+            console.error(e);
         }
     });
 }
