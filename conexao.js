@@ -43,6 +43,9 @@ function setupTheme() {
 // ===============================
 // 0. Bateria Social
 // ===============================
+// ===============================
+// 0. Bateria Social
+// ===============================
 function setupBattery() {
     const slider = document.getElementById("socialBattery");
     const icon = document.getElementById("batteryIcon");
@@ -51,32 +54,45 @@ function setupBattery() {
 
     if (!slider) return;
 
+    // Dispara enquanto o usuário arrasta a barra
     slider.addEventListener("input", () => {
         const val = parseInt(slider.value);
         pct.innerText = val + "%";
         
+        // Lógica de ícones original
         if (val > 80) icon.innerText = "⚡";      
         else if (val > 40) icon.innerText = "🔋"; 
         else if (val > 20) icon.innerText = "🪫"; 
         else icon.innerText = "💀";               
+
+        // NOVA LÓGICA DE CORES DA INTERFACE (3 Caminhos)
+        if (val > 50) {
+            pct.style.color = "#4caf50"; // Verde (Normal)
+        } else if (val <= 50 && val >= 20) {
+            pct.style.color = "#ff9800"; // Laranja/Amarelo (Alerta)
+        } else if (val < 20) {
+            pct.style.color = "#f44336"; // Vermelho (Crítico)
+        }
     });
 
+    // Dispara quando o usuário solta a barra
     slider.addEventListener("change", async () => {
         const val = parseInt(slider.value);
-        advice.innerText = "Salvando...";
+        advice.innerText = "Consultando o Sereno Engine...";
+        advice.style.color = "var(--text-muted)";
 
         try {
-            // 1. Mantém salvando no seu backend Python local (histórico)
+            // 1. Salva no backend local (histórico)
             await fetch(`${API_URL}/api/battery`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ level: val })
             });
             
-            // 2. AQUI ESTÁ A MUDANÇA: Chama o Make para gerar o conselho inteligente!
+            // 2. Chama a função que fala com o Webhook do Make
             buscarConselhoIA(val);
 
-            // 3. Mantém a sua lógica do modo de baixa estimulação
+            // 3. Mantém a lógica de baixa estimulação
             if (val <= 20 && !document.body.classList.contains('low-stimulus')) {
                const confirmLow = confirm("Sua bateria social está crítica. Deseja ativar o modo Baixa Estimulação?");
                if(confirmLow) document.body.classList.add('low-stimulus');
