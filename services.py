@@ -111,3 +111,37 @@ def calcular_bateria_social_gpt(texto: str) -> int:
     except Exception as e:
         print(f"Erro Gemini Bateria: {e}")
         return 50
+    
+def prever_sobrecarga_mmq(historico_bateria: list) -> dict:
+    """
+    Analisa a tendência da bateria social usando MMQ.
+    Retorna True se detectar uma queda brusca (sobrecarga iminente).
+    """
+    n = len(historico_bateria)
+    if n < 3:  # Necessário um histórico mínimo para prever tendência
+        return {"alerta": False, "mensagem": ""}
+
+    # x = tempo (índice), y = nível da bateria
+    x = list(range(n))
+    y = historico_bateria
+
+    soma_x = sum(x)
+    soma_y = sum(y)
+    soma_xy = sum(xi * yi for xi, yi in zip(x, y))
+    soma_x2 = sum(xi**2 for xi in x)
+
+    denominador = (n * soma_x2) - (soma_x**2)
+    if denominador == 0:
+        return {"alerta": False, "mensagem": ""}
+
+    # Cálculo da inclinação (m)
+    m = ((n * soma_xy) - (soma_x * soma_y)) / denominador
+
+    # Se m < -5, a bateria está a cair mais de 5% por interação
+    if m <= -5.0:
+        return {
+            "alerta": True,
+            "mensagem": "⚠️ Alerta: Queda rápida de energia detectada. Sugerimos pausa imediata."
+        }
+    
+    return {"alerta": False, "mensagem": "Energia estável."}

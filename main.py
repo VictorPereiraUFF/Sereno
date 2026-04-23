@@ -1,3 +1,23 @@
+historico_usuario = []
+
+@app.post("/api/bateria") # type: ignore
+async def rota_bateria(dados: dict):
+    texto = dados.get("texto", "")
+    nivel_atual = calcular_bateria_social_gpt(texto)
+    
+    # Adiciona ao histórico e mantém apenas os últimos 5 registros
+    historico_usuario.append(nivel_atual)
+    if len(historico_usuario) > 5:
+        historico_usuario.pop(0)
+    
+    # Calcula a previsão
+    analise = prever_sobrecarga_mmq(historico_usuario)
+    
+    return {
+        "nivel": nivel_atual,
+        "previsao": analise
+    }
+
 # main.py
 from fastapi import FastAPI, Depends, Body # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
@@ -6,7 +26,7 @@ from sqlmodel import Session, select # type: ignore
 # --- IMPORTAÇÕES LOCAIS ---
 from database import create_db_and_tables, get_session
 from models import User, Script, SocialBattery, ChatRequest, BatteryRequest
-from services import gerar_resposta_gpt, suavizar_texto_gpt, calcular_bateria_social_gpt
+from services import gerar_resposta_gpt, prever_sobrecarga_mmq, suavizar_texto_gpt, calcular_bateria_social_gpt
 
 # ---------- CONFIGURAÇÕES DO APP ----------
 app = FastAPI(title="Sereno Backend", version="0.6.0")

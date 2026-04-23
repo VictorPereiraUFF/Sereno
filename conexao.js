@@ -121,13 +121,31 @@ async function analisarEnergiaViaIA(texto) {
             body: JSON.stringify({ texto: texto })
         });
         const data = await res.json();
-        const novoNivel = data.nivel_estimado;
+        
+        // Mantém a compatibilidade com a variável atual
+        const novoNivel = data.nivel !== undefined ? data.nivel : data.nivel_estimado;
 
         const slider = document.getElementById("socialBattery");
         if(slider) {
             slider.value = novoNivel;
-            slider.dispatchEvent(new Event('input'));
-            slider.dispatchEvent(new Event('change'));
+            slider.dispatchEvent(new Event('input')); // Atualiza as cores e a porcentagem
+            slider.dispatchEvent(new Event('change')); // Dispara o Webhook do Make que você já configurou!
+
+            // NOVA LÓGICA: Alerta Preditivo (MMQ)
+            if (data.previsao && data.previsao.alerta) {
+                // O setTimeout dá tempo do Make responder, para não apagar nosso alerta matemático
+                setTimeout(() => {
+                    advice.style.color = "#f44336"; // Fica vermelho
+                    // Junta o conselho do Make com o alerta preditivo
+                    advice.innerHTML = `<strong>${data.previsao.mensagem}</strong><br>${advice.innerHTML}`;
+                    
+                    const icon = document.getElementById("batteryIcon");
+                    if(icon) {
+                        icon.innerText = "⚠️";
+                        icon.classList.add("shake-animation"); // Inicia a animação de perigo
+                    }
+                }, 1500); 
+            }
         }
     } catch (e) {
         console.error("Erro na leitura inteligente da bateria.", e);
