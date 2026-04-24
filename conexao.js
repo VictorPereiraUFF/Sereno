@@ -416,7 +416,20 @@ function setupMicSimulation() {
     const lowStimBtn = document.getElementById('lowStimBtn');
     if(lowStimBtn) {
         lowStimBtn.addEventListener('click', () => {
-            document.body.classList.toggle('low-stimulus');
+            // Alterna a classe na tela
+            const isActive = document.body.classList.toggle('low-stimulus');
+            
+            // Envia a ordem para o Arduino ligar ou desligar o dispositivo físico!
+            const comando = isActive ? '1' : '0';
+            
+            fetch(`${API_URL}/api/motor`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({estado: comando})
+            })
+            .then(res => res.json())
+            .then(data => console.log("Resposta do Arduino:", data))
+            .catch(err => console.error("Erro ao tentar acionar hardware:", err));
         });
     }
 }

@@ -1,24 +1,6 @@
-historico_usuario = []
-
-@app.post("/api/bateria") # type: ignore
-async def rota_bateria(dados: dict):
-    texto = dados.get("texto", "")
-    nivel_atual = calcular_bateria_social_gpt(texto)
-    
-    # Adiciona ao histórico e mantém apenas os últimos 5 registros
-    historico_usuario.append(nivel_atual)
-    if len(historico_usuario) > 5:
-        historico_usuario.pop(0)
-    
-    # Calcula a previsão
-    analise = prever_sobrecarga_mmq(historico_usuario)
-    
-    return {
-        "nivel": nivel_atual,
-        "previsao": analise
-    }
-
 # main.py
+import serial # type: ignore
+import time
 from fastapi import FastAPI, Depends, Body # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from sqlmodel import Session, select # type: ignore
@@ -40,14 +22,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Cria as tabelas ao iniciar usando a função importada
+# Cria as tabelas do banco de dados ao iniciar
 create_db_and_tables()
 
-# ---------- ROTAS ----------
+# ---------- CONFIGURAÇÃO DO HARDWARE (ARDUINO) ----------
+# Tenta conectar com o Arduino pela porta USB
+try:
+    # IMPORTANTE: Mude 'COM3' para a porta que aparecer na sua IDE do Arduino (ex: COM4, COM5)
+    arduino = serial.Serial('COM3', 9600, timeout=1)
+    time.sleep(2) # Pausa rápida para o Arduino sincronizar
+    arduino_conectado = True
+    print("✅ Arduino conectado com sucesso!")
+except Exception as e:
+    print(f"⚠️ Aviso: Arduino não encontrado. O sistema funcionará apenas de forma virtual. Detalhe: {e}")
+    arduino_conectado = False
+
+# ---------- VARIÁVEL GLOBAL (MEMÓRIA PREDITIVA) ----------
+historico_usuario = []
+
+
+# ---------- ROTAS DA API ----------
 
 @app.get("/")
 def home():
-    return {"status": "Sereno Backend Online", "db": "Active"}
+    return {"status": "Sereno Backend Online", "db": "Active", "arduino": arduino_conectado}
 
 # Rota de IA (Chat Geral)
 @app.post("/api/ia")
@@ -61,11 +59,25 @@ def endpoint_suavizar(payload: ChatRequest):
     resultado = suavizar_texto_gpt(payload.texto)
     return {"revisado": resultado}
 
-# Rota de Cálculo Inteligente de Bateria (NOVO)
+# Rota de Cálculo Inteligente de Bateria + Previsão de Sobrecarga (MMQ)
 @app.post("/api/bateria/calcular")
 def calcular_energia_endpoint(payload: ChatRequest):
+    global historico_usuario # Usa a lista global para lembrar das últimas pontuações
+    
     nivel_calculado = calcular_bateria_social_gpt(payload.texto)
-    return {"nivel_estimado": nivel_calculado}
+    
+    # Adiciona ao histórico e mantém apenas os últimos 5 registros
+    historico_usuario.append(nivel_calculado)
+    if len(historico_usuario) > 5:
+        historico_usuario.pop(0)
+    
+    # Calcula a previsão de queda usando a matemática de Mínimos Quadrados
+    analise = prever_sobrecarga_mmq(historico_usuario)
+    
+    return {
+        "nivel_estimado": nivel_calculado,
+        "previsao": analise
+    }
 
 # Rota de Bateria Social Manual
 @app.post("/api/battery")
@@ -91,7 +103,7 @@ def get_battery_history(session: Session = Depends(get_session)):
     results = session.exec(statement).all()
     return results
 
-# Rotas de Scripts
+# Rotas de Scripts Sociais
 @app.get("/scripts")
 def list_scripts(session: Session = Depends(get_session)):
     scripts = session.exec(select(Script)).all()
@@ -111,6 +123,23 @@ def add_script(message: str = Body(..., embed=True), session: Session = Depends(
 def log_event(payload: dict = Body(...)):
     print(f"Evento recebido: {payload}")
     return {"status": "logged"}
+
+
+# ---------- ROTA DO HARDWARE (NOVO) ----------
+@app.post("/api/motor")
+def controlar_motor(dados: dict = Body(...)):
+    estado = dados.get("estado")
+    
+    if arduino_conectado:
+        if estado == '1':
+            arduino.write(b'1') # Envia comando de LIGAR para o Arduino
+            return {"mensagem": "Motor ativado! Regulação tátil iniciada."}
+        else:
+            arduino.write(b'0') # Envia comando de DESLIGAR
+            return {"mensagem": "Motor desativado!"}
+    
+    return {"erro": "Hardware físico não conectado. Conecte o Arduino no cabo USB."}
+
 
 # ---------- INICIALIZAÇÃO ----------
 if __name__ == "__main__":
