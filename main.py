@@ -13,11 +13,17 @@ from services import gerar_resposta_gpt, prever_sobrecarga_mmq, suavizar_texto_g
 # ---------- CONFIGURAÇÕES DO APP ----------
 app = FastAPI(title="Sereno Backend", version="0.6.0")
 
-# CORS (Permite que o HTML converse com o Python)
+# CORS (Permite que o HTML converse com o Python de forma segura)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    # Define exatamente quem pode acessar a API
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://127.0.0.1:5173",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ],
+    allow_credentials=False, # Corrigindo a incompatibilidade com a spec do CORS
     allow_methods=["*"],
     allow_headers=["*"],
 )
