@@ -4,6 +4,7 @@ import time
 from fastapi import FastAPI, Depends, Body # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from sqlmodel import Session, select # type: ignore
+from security import proteger_dado, revelar_dado # type: ignore
 
 # --- IMPORTAÇÕES LOCAIS ---
 from database import create_db_and_tables, get_session
