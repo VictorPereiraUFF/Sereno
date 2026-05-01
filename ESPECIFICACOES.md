@@ -1,6 +1,6 @@
 # Sereno AI — Especificações de Funcionalidades
 
-**Versão do documento:** 1.0  
+**Versão do documento:** 1.1  
 **Data:** 2026-04-26  
 **Stack principal:** Python FastAPI · JavaScript Vanilla · Arduino · Google Gemini API · SQLite
 
@@ -9,6 +9,116 @@
 ## Visão Geral
 
 O **Sereno** é um assistente de regulação sensorial e acessibilidade voltado para pessoas neurodivergentes (com foco em autismo). Combina inteligência artificial, feedback tátil via hardware e ferramentas de regulação sensorial para ajudar o usuário a monitorar e gerenciar sua energia social no dia a dia.
+
+---
+
+## Casos de Uso
+
+### UC-01 — Monitorar energia antes de um evento social
+
+**Ator:** Usuário neurodivergente  
+**Contexto:** O usuário tem uma reunião, encontro ou compromisso social em breve e quer avaliar se tem energia suficiente para participar.
+
+**Fluxo principal:**
+1. O usuário abre o Sereno e descreve como está se sentindo no campo de texto da Bateria Social.
+2. A IA analisa o texto e estima um nível de 0 a 100%.
+3. O sistema exibe a cor correspondente (verde / laranja / vermelho) e um conselho personalizado via Make.com.
+4. Se o nível estiver abaixo de 20%, o app sugere ativar o Modo Baixa Estimulação.
+5. O usuário decide participar, adiar ou recusar o compromisso com base na leitura.
+
+**Resultado esperado:** O usuário toma uma decisão informada sobre sua participação, sem depender apenas de intuição.
+
+---
+
+### UC-02 — Recuperar energia após sobrecarga sensorial
+
+**Ator:** Usuário em estado de sobrecarga (meltdown ou shutdown iminente)  
+**Contexto:** O usuário acabou de passar por uma situação muito estimulante (ambiente barulhento, reunião longa, interação social intensa) e precisa se regular.
+
+**Fluxo principal:**
+1. O usuário abre o Sereno e move o slider da Bateria Social para um nível baixo (ou usa a descrição em texto).
+2. O app detecta nível crítico e ativa automaticamente o Modo Baixa Estimulação (cores neutras, sem animações).
+3. O usuário acessa a seção de Regulação Sensorial e inicia a Respiração Guiada.
+4. Paralelamente, ativa o Ruído Marrom para abafar estímulos sonoros externos.
+5. Se o Arduino estiver conectado, o motor de passo inicia vibração tátil suave.
+6. Após alguns minutos, o usuário atualiza o slider para refletir a melhora.
+
+**Resultado esperado:** O usuário encontra calma guiada em menos de 5 minutos, sem precisar explicar o que está sentindo para ninguém.
+
+---
+
+### UC-03 — Recusar um convite sem criar conflito social
+
+**Ator:** Usuário que precisa declinar um compromisso  
+**Contexto:** O usuário recebe um convite (mensagem, e-mail, presencialmente) e quer recusar de forma educada, mas não sabe como formular a resposta sem soar indelicado.
+
+**Fluxo principal:**
+1. O usuário acessa o Tradutor Social e digita a frase que escreveria naturalmente (ex: *"Não posso, tô cansado."*).
+2. A IA reescreve a frase em tom empático e socialmente adequado (ex: *"Infelizmente não poderei comparecer desta vez, pois preciso recarregar minhas energias."*).
+3. O usuário copia o texto e envia pelo canal desejado (WhatsApp, e-mail, etc.).
+4. O sistema registra a interação e atualiza automaticamente o nível de bateria com base no texto original.
+
+**Resultado esperado:** O usuário comunica sua necessidade de forma clara e socialmente aceita, sem desgaste emocional adicional.
+
+---
+
+### UC-04 — Sair de uma situação desconfortável rapidamente
+
+**Ator:** Usuário em situação social que excedeu seu limite  
+**Contexto:** O usuário está num evento, reunião ou conversa e precisa se retirar imediatamente, mas tem dificuldade de formular palavras sob pressão.
+
+**Fluxo principal:**
+1. O usuário abre o Sereno discretamente no celular.
+2. Acessa os Scripts Sociais Rápidos e seleciona a frase adequada (ex: *"Não estou me sentindo bem, preciso sair."*).
+3. Toca no botão de voz para ouvir a frase sendo lida em voz alta, ou copia para enviar por mensagem.
+4. Usa a frase para se comunicar e se retira do ambiente.
+
+**Resultado esperado:** O usuário consegue se retirar com dignidade, sem precisar improvisar comunicação sob estresse.
+
+---
+
+### UC-05 — Identificar gatilhos sensoriais num ambiente
+
+**Ator:** Usuário prestes a entrar em um ambiente desconhecido  
+**Contexto:** O usuário vai a um lugar novo (restaurante, escritório, evento) e quer saber antecipadamente se o ambiente pode ser sensorialmente intenso.
+
+**Fluxo principal:**
+1. O usuário tira uma foto do ambiente com o celular.
+2. Acessa o Assistente Multimodal e envia a imagem com ou sem texto descritivo.
+3. A IA analisa a imagem em busca de gatilhos sensoriais: iluminação intensa, padrões visuais perturbadores, aglomeração, desorganização.
+4. O assistente retorna uma avaliação com os riscos identificados e sugestões de adaptação (ex: *"Ambiente com iluminação fluorescente intensa — considere usar óculos escuros ou se sentar de costas para as lâmpadas."*).
+
+**Resultado esperado:** O usuário entra no ambiente com estratégias preparadas, reduzindo a chance de sobrecarga inesperada.
+
+---
+
+### UC-06 — Acompanhar a tendência da bateria ao longo do dia
+
+**Ator:** Usuário que quer entender seus padrões de energia  
+**Contexto:** O usuário registra sua bateria múltiplas vezes ao dia e quer saber se está em queda consistente antes de atingir o limite.
+
+**Fluxo principal:**
+1. O usuário atualiza sua bateria social 3 ou mais vezes ao longo do dia (manhã, almoço, tarde).
+2. O sistema aplica o algoritmo MMQ sobre os registros e detecta a tendência de queda.
+3. Se a queda for maior que 5% por interação, o ícone da bateria começa a tremer e o alerta "Sobrecarga Iminente" é exibido.
+4. O usuário recebe o alerta antes de atingir o limite e toma uma ação preventiva (pausa, saída do ambiente, regulação sensorial).
+
+**Resultado esperado:** O usuário age preventivamente, evitando chegar ao estado de sobrecarga completa.
+
+---
+
+### UC-07 — Criar um script personalizado para situação recorrente
+
+**Ator:** Usuário que enfrenta uma situação social específica com frequência  
+**Contexto:** O usuário tem dificuldade recorrente em situações específicas (ex: pedir para baixar o volume, recusar contato físico) e quer ter uma frase pronta para usar sempre que precisar.
+
+**Fluxo principal:**
+1. O usuário acessa a seção de Scripts Sociais Rápidos e clica em adicionar novo script.
+2. Digita a frase que deseja salvar (ex: *"Prefiro não ser abraçado, mas agradeço o carinho."*).
+3. O script é salvo no banco e aparece na lista principal.
+4. Nas próximas vezes, o usuário acessa diretamente o script salvo, copia ou ouve em voz alta.
+
+**Resultado esperado:** O usuário constrói ao longo do tempo um repertório de frases personalizado para suas situações mais desafiadoras.
 
 ---
 
