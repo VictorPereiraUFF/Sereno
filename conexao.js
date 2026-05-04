@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupChat();
     setupTranslator();
     setupBrownNoise();
+    carregarDashboard();
 });
 
 // ===============================
@@ -89,10 +90,13 @@ function setupBattery() {
                 body: JSON.stringify({ level: val })
             });
             
-            // 2. Chama a função que fala com o Webhook do Make
+            // 2. ATUALIZA O GRÁFICO EM TEMPO REAL! <-- ADICIONE ESTA LINHA
+            carregarDashboard();
+
+            // 3. Chama a função que fala com o Webhook do Make
             buscarConselhoIA(val);
 
-            // 3. Mantém a lógica de baixa estimulação
+            // 4. Mantém a lógica de baixa estimulação
             if (val <= 20 && !document.body.classList.contains('low-stimulus')) {
                const confirmLow = confirm("Sua bateria social está crítica. Deseja ativar o modo Baixa Estimulação?");
                if(confirmLow) document.body.classList.add('low-stimulus');
@@ -458,5 +462,72 @@ async function buscarConselhoIA(nivelBateria) {
     } catch (error) {
         console.error("Erro na automação:", error);
         if (campoTexto) campoTexto.innerText = "Tire um momento para relaxar.";
+    }
+}
+
+// ===============================
+// 6. Dashboard de Impacto
+// ===============================
+let meuGrafico = null; // Variável global para guardar o gráfico e atualizá-lo depois
+
+async function carregarDashboard() {
+    const canvas = document.getElementById('impactChart');
+    if (!canvas) return; 
+
+    try {
+        const res = await fetch(`${API_URL}/api/battery/history`);
+        const historico = await res.json();
+
+        // TRUQUE VISUAL: Se o banco estiver vazio, cria um ponto de partida para o gráfico não ficar invisível!
+        if (historico.length === 0) {
+            historico.push({ level: parseInt(document.getElementById("socialBattery").value) || 80, timestamp: new Date().toISOString() });
+        }
+
+        historico.reverse();
+
+        const niveis = historico.map(registro => registro.level);
+        const rotulos = historico.map(registro => {
+            const data = new Date(registro.timestamp); 
+            return `${data.getHours()}h${data.getMinutes().toString().padStart(2, '0')}`;
+        });
+
+        const ctx = canvas.getContext('2d');
+        
+        // Destrói o desenho antigo antes de injetar os dados novos (previne erros na tela)
+        if (meuGrafico) {
+            meuGrafico.destroy();
+        }
+
+        meuGrafico = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: rotulos,
+                datasets: [{
+                    label: 'Energia Social (%)',
+                    data: niveis,
+                    borderColor: '#4caf50', 
+                    backgroundColor: 'rgba(76, 175, 80, 0.2)', 
+                    borderWidth: 3,
+                    tension: 0.4, 
+                    fill: true,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        max: 100 
+                    }
+                },
+                plugins: {
+                    legend: { display: false } 
+                }
+            }
+        });
+    } catch (e) {
+        console.error("Erro ao carregar os dados do Dashboard:", e);
     }
 }

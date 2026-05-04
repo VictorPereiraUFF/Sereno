@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <meta name="theme-color" content="#71D1B3">
   <style>
     .battery-wrapper { margin: 15px 0; text-align: center; }
@@ -48,6 +49,10 @@
             <p id="batteryAdvice" style="font-size: 13px; color: var(--accent); margin-top: 10px; min-height: 20px;">
               Escreva no Chat ou no Tradutor para a IA calcular sua energia...
             </p>
+          </div>
+          <div class="dashboard-container" style="max-width: 600px; margin: 20px auto; background: var(--bg-panel); padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <h3 style="text-align: center; margin-bottom: 10px;">📊 Histórico de Impacto Sensorial</h3>
+            <canvas id="impactChart"></canvas>
           </div>
         </article>
 
