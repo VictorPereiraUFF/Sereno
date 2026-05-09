@@ -334,10 +334,11 @@ window.copiarTraducao = function() {
 };
 
 // ===============================
-// 4. Ruído Marrom (Brown Noise)
+// 4. Mascaramento Sonoro (Marrom e Branco)
 // ===============================
 function setupBrownNoise() {
     const noiseBtn = document.getElementById("noiseBtn");
+    const noiseType = document.getElementById("noiseType"); // Puxa o menu do HTML
     let audioContext = null;
     let noiseSource = null;
     let isPlaying = false;
@@ -352,10 +353,20 @@ function setupBrownNoise() {
                 const data = buffer.getChannelData(0);
 
                 let lastOut = 0;
+                // Verifica qual opção está selecionada no menu
+                const selectedType = noiseType ? noiseType.value : 'brown'; 
+
                 for (let i = 0; i < bufferSize; i++) {
                     const white = Math.random() * 2 - 1;
-                    lastOut = (lastOut + (0.02 * white)) / 1.02;
-                    data[i] = lastOut * 3.5; 
+                    
+                    if (selectedType === 'brown') {
+                        // Matemática do Ruído Marrom (Abaixa as altas frequências)
+                        lastOut = (lastOut + (0.02 * white)) / 1.02;
+                        data[i] = lastOut * 3.5; 
+                    } else if (selectedType === 'white') {
+                        // Matemática do Ruído Branco (Frequência bruta, volume baixo)
+                        data[i] = white * 0.05; 
+                    }
                 }
 
                 noiseSource = audioContext.createBufferSource();
@@ -379,6 +390,15 @@ function setupBrownNoise() {
                 noiseBtn.classList.remove("warn");
             }
         });
+
+        // Desliga o som automaticamente se o usuário trocar o tipo de ruído enquanto toca
+        if (noiseType) {
+            noiseType.addEventListener("change", () => {
+                if (isPlaying) {
+                    noiseBtn.click(); 
+                }
+            });
+        }
     }
 }
 
