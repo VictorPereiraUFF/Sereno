@@ -334,11 +334,11 @@ window.copiarTraducao = function() {
 };
 
 // ===============================
-// 4. Mascaramento Sonoro (Marrom e Branco)
+// 4. Mascaramento Sonoro (Avançado)
 // ===============================
 function setupBrownNoise() {
     const noiseBtn = document.getElementById("noiseBtn");
-    const noiseType = document.getElementById("noiseType"); // Puxa o menu do HTML
+    const noiseType = document.getElementById("noiseType");
     let audioContext = null;
     let noiseSource = null;
     let isPlaying = false;
@@ -353,19 +353,54 @@ function setupBrownNoise() {
                 const data = buffer.getChannelData(0);
 
                 let lastOut = 0;
-                // Verifica qual opção está selecionada no menu
+                let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+                
                 const selectedType = noiseType ? noiseType.value : 'brown'; 
 
                 for (let i = 0; i < bufferSize; i++) {
                     const white = Math.random() * 2 - 1;
                     
                     if (selectedType === 'brown') {
-                        // Matemática do Ruído Marrom (Abaixa as altas frequências)
                         lastOut = (lastOut + (0.02 * white)) / 1.02;
                         data[i] = lastOut * 3.5; 
+                        
                     } else if (selectedType === 'white') {
-                        // Matemática do Ruído Branco (Frequência bruta, volume baixo)
                         data[i] = white * 0.05; 
+                        
+                    } else if (selectedType === 'pink') {
+                        b0 = 0.99886 * b0 + white * 0.0555179;
+                        b1 = 0.99332 * b1 + white * 0.0750759;
+                        b2 = 0.96900 * b2 + white * 0.1538520;
+                        b3 = 0.86650 * b3 + white * 0.3104856;
+                        b4 = 0.55000 * b4 + white * 0.5329522;
+                        b5 = -0.7616 * b5 - white * 0.0168980;
+                        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
+                        b6 = white * 0.115926;
+                        
+                    } else if (selectedType === 'ocean') {
+                        lastOut = (lastOut + (0.02 * white)) / 1.02;
+                        let osciladorLFO = (Math.sin(i / audioContext.sampleRate * 1.0) + 1) / 2;
+                        let volumeOnda = 0.2 + (osciladorLFO * 0.8); 
+                        data[i] = (lastOut * 3.5) * volumeOnda; 
+                        
+                    } else if (selectedType === 'rain') {
+                        // Chuva: Usa as frequências do Ruído Rosa + gotas aleatórias
+                        b0 = 0.99886 * b0 + white * 0.0555179;
+                        b1 = 0.99332 * b1 + white * 0.0750759;
+                        b2 = 0.96900 * b2 + white * 0.1538520;
+                        let rosa = (b0 + b1 + b2 + white * 0.5) * 0.04;
+                        // Simula gotas pingando (picos aleatórios bem raros)
+                        let gota = (Math.random() > 0.9995) ? (Math.random() * 0.4) : 0; 
+                        data[i] = (rosa * 1.8) + gota;
+
+                    } else if (selectedType === 'wind') {
+                        // Vento: Ruído marrom mais abafado com rajadas irregulares
+                        lastOut = (lastOut + (0.01 * white)) / 1.01; 
+                        // Duas ondas LFO diferentes misturadas quebram o padrão repetitivo
+                        let lfo1 = (Math.sin(i / audioContext.sampleRate * 0.4) + 1) / 2;
+                        let lfo2 = (Math.sin(i / audioContext.sampleRate * 0.15) + 1) / 2;
+                        let volumeVento = 0.1 + (lfo1 * 0.4) + (lfo2 * 0.5); 
+                        data[i] = (lastOut * 4.0) * volumeVento; 
                     }
                 }
 
@@ -391,7 +426,6 @@ function setupBrownNoise() {
             }
         });
 
-        // Desliga o som automaticamente se o usuário trocar o tipo de ruído enquanto toca
         if (noiseType) {
             noiseType.addEventListener("change", () => {
                 if (isPlaying) {
