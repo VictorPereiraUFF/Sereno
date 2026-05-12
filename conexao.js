@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupTranslator();
     setupBrownNoise();
     carregarDashboard();
+    setupEnergyBudget();
 });
 
 // ===============================
@@ -583,5 +584,63 @@ async function carregarDashboard() {
         });
     } catch (e) {
         console.error("Erro ao carregar os dados do Dashboard:", e);
+    }
+}
+
+// ===============================
+// 7. Orçamento de Energia
+// ===============================
+function setupEnergyBudget() {
+    const btn = document.getElementById("analyzePlanBtn");
+    const input = document.getElementById("planInput");
+    const resultBox = document.getElementById("planResult");
+    const slider = document.getElementById("socialBattery");
+
+    if (btn) {
+        btn.addEventListener("click", async () => {
+            const texto = input.value.trim();
+            if (!texto) return;
+
+            // Muda o botão para estado de carregamento
+            btn.innerText = "⏳ Calculando custos...";
+            btn.disabled = true;
+            resultBox.classList.remove("hidden");
+            resultBox.innerHTML = "<em>Analisando a carga cognitiva e sensorial do seu dia...</em>";
+            resultBox.style.borderLeftColor = "#ff9800"; // Laranja (processando)
+
+            try {
+                // Pega o valor atual da barra de bateria
+                const bateriaAtual = parseInt(slider.value);
+
+                const res = await fetch(`${API_URL}/api/energia/prever`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        bateria_atual: bateriaAtual, 
+                        atividades: texto 
+                    })
+                });
+
+                const data = await res.json();
+                
+                // Formata o texto da IA substituindo quebras de linha por <br> para o HTML
+                const analiseFormatada = data.analise.replace(/\n/g, '<br>');
+                resultBox.innerHTML = analiseFormatada;
+
+                // Muda a cor da borda dependendo se a palavra "sobrecarga" ou "crítico" aparecer na resposta
+                if (data.analise.toLowerCase().includes("sobrecarga") || data.analise.toLowerCase().includes("crítico")) {
+                    resultBox.style.borderLeftColor = "#f44336"; // Vermelho (Perigo)
+                } else {
+                    resultBox.style.borderLeftColor = "#4caf50"; // Verde (Seguro)
+                }
+
+            } catch (e) {
+                console.error(e);
+                resultBox.innerHTML = "Dificuldade ao conectar com o motor preditivo.";
+            } finally {
+                btn.innerText = "Calcular Orçamento Diário";
+                btn.disabled = false;
+            }
+        });
     }
 }

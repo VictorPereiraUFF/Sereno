@@ -1,4 +1,3 @@
-# main.py
 import serial # type: ignore
 import time
 from fastapi import FastAPI, Depends, Body # type: ignore
@@ -151,3 +150,38 @@ def controlar_motor(dados: dict = Body(...)):
 if __name__ == "__main__":
     import uvicorn # type: ignore
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+from pydantic import BaseModel
+
+# 1. Cria o modelo de dados para receber o plano
+class Planejamento(BaseModel):
+    bateria_atual: int
+    atividades: str
+
+# 2. Cria a nova rota de previsão
+@app.post("/api/energia/prever")
+def prever_energia(plan: Planejamento):
+    # Prompt de sistema que transforma a IA em uma "Contadora de Energia"
+    prompt = f"""
+    Você é um assistente especialista em regulação sensorial e carga social.
+    O usuário possui atualmente {plan.bateria_atual}% de bateria social.
+    Ele planeja fazer as seguintes atividades hoje: "{plan.atividades}".
+    
+    Sua tarefa:
+    1. Analise o impacto sensorial, cognitivo e social de CADA atividade.
+    2. Atribua um "custo" em porcentagem (%) para cada uma.
+    3. Subtraia os custos da bateria atual ({plan.bateria_atual}%).
+    4. Dê um veredito claro: O usuário conseguirá fazer tudo sem entrar em sobrecarga (bateria < 15%)?
+    
+    Retorne a resposta em formato amigável e direto, usando bullet points para os custos, e diga o Saldo Final de bateria previsto.
+    """
+    
+    try:
+        # Puxando a mesma variável "client" que você já usa no topo do main.py
+        resposta_texto = gerar_resposta_gpt(prompt, None)
+        
+        return {"analise": resposta_texto}
+
+    except Exception as e:
+        print(f"Erro real detectado na IA: {e}")
+        return {"analise": "Erro ao processar o planejamento com a IA."}
