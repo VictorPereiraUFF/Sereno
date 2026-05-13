@@ -161,9 +161,9 @@ class Planejamento(BaseModel):
 # 2. Cria a nova rota de previsão
 @app.post("/api/energia/prever")
 def prever_energia(plan: Planejamento):
-    # Prompt de sistema que transforma a IA em uma "Contadora de Energia"
+    # Prompt de sistema que transforma a IA em uma "Contadora de Energia e Recuperação"
     prompt = f"""
-    Você é um assistente especialista em regulação sensorial e carga social.
+    Você é o Sereno, um assistente especialista em regulação sensorial e carga social.
     O usuário possui atualmente {plan.bateria_atual}% de bateria social.
     Ele planeja fazer as seguintes atividades hoje: "{plan.atividades}".
     
@@ -171,17 +171,20 @@ def prever_energia(plan: Planejamento):
     1. Analise o impacto sensorial, cognitivo e social de CADA atividade.
     2. Atribua um "custo" em porcentagem (%) para cada uma.
     3. Subtraia os custos da bateria atual ({plan.bateria_atual}%).
-    4. Dê um veredito claro: O usuário conseguirá fazer tudo sem entrar em sobrecarga (bateria < 15%)?
+    4. Veredito: O usuário conseguirá fazer tudo sem entrar em sobrecarga (bateria < 15%)? Diga o Saldo Final.
+    5. Estimativa de Recuperação: Analise o tamanho do desgaste gerado por essas atividades e estime o tempo e o tipo de descanso necessários para recarregar a bateria gasta (ex: "45 minutos de isolamento acústico", "2 horas de hiperfoco", ou "Uma noite inteira de sono profundo").
     
-    Retorne a resposta em formato amigável e direto, usando bullet points para os custos, e diga o Saldo Final de bateria previsto.
+    Formatação obrigatória: 
+    - Seja amigável e direto.
+    - Use bullet points para listar os custos das atividades.
+    - Crie um título final chamado "⏳ Tempo de Recuperação Estimado" para destacar a sua previsão de recarga, sugerindo o uso de ferramentas do app (como o gerador de ruído marrom/ondas do mar ou respiração guiada) se a carga for alta.
     """
     
     try:
-        # Puxando a mesma variável "client" que você já usa no topo do main.py
+        # Reutilizamos a função já existente no seu services.py!
         resposta_texto = gerar_resposta_gpt(prompt, None)
         
         return {"analise": resposta_texto}
-
     except Exception as e:
         print(f"Erro real detectado na IA: {e}")
         return {"analise": "Erro ao processar o planejamento com a IA."}
