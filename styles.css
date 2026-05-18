@@ -51,7 +51,7 @@ body {
   line-height: 1.6; padding: 32px 16px; transition: background-color 0.3s, color 0.3s;
 }
 
-.page { max-width: 900px; margin: 0 auto; }
+.page { max-width: 1200px; margin: 0 auto; }
 
 header { display: flex; align-items: center; margin-bottom: 24px; }
 
@@ -83,7 +83,7 @@ header { display: flex; align-items: center; margin-bottom: 24px; }
 
 /* Chat */
 .chat-container { display: flex; flex-direction: column; gap: 10px; }
-.chat-history { height: 300px; overflow-y: auto; background: var(--script-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 166px; display: flex; flex-direction: column; gap: 12px; }
+.chat-history { height: 300px; overflow-y: auto; background: var(--script-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .message { padding: 10px 14px; border-radius: 8px; max-width: 85%; font-size: 14px; word-wrap: break-word; }
 .ai-msg { background: var(--ai-msg-bg); align-self: flex-start; }
 .user-msg { background: var(--accent); color: white; align-self: flex-end; }
@@ -129,7 +129,7 @@ main { display: grid; gap: 20px; }
 
 /* === MEDIA QUERY PARA DESKTOP === */
 @media (min-width: 768px) {
-  main { grid-template-columns: 2fr 1fr; }
+  
 }
 
 /* === MODO BAIXA ESTIMULAÇÃO === */
@@ -173,4 +173,30 @@ body.low-stimulus { --accent: #9CA3AF; }
   animation: shake 0.5s ease-in-out infinite;
   display: inline-block;
   color: var(--danger);
+}
+
+/* =========================================
+   GRID DO TOPO (Bateria + Regulação)
+   ========================================= */
+.top-dashboard-grid {
+  display: grid;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* No desktop, criamos um layout assimétrico */
+@media (min-width: 768px) {
+  .top-dashboard-grid {
+    grid-template-columns: 1.4fr 1fr; /* Bateria mais larga, Regulação mais estreita */
+  }
+  
+  .battery-card {
+    grid-row: span 2; /* Faz o card da bateria ocupar a altura de 2 cards da outra coluna */
+    margin-bottom: 0; 
+  }
+  
+  .regulation-card, 
+  .focus-card {
+    margin-bottom: 0; /* O gap do grid já gerencia o espaço entre eles */
+  }
 }
