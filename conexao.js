@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupBrownNoise();
     carregarDashboard();
     setupEnergyBudget();
+    setupPanicButton();
 });
 
 // ===============================
@@ -640,6 +641,38 @@ function setupEnergyBudget() {
             } finally {
                 btn.innerText = "Calcular Orçamento Diário";
                 btn.disabled = false;
+            }
+        });
+    }
+}
+
+// ===============================
+// 8. Botão de Pausa Sensorial (Pânico)
+// ===============================
+function setupPanicButton() {
+    const panicBtn = document.getElementById("panicBtn");
+    
+    if (panicBtn) {
+        panicBtn.addEventListener("click", () => {
+            // 1. Ativa o modo de baixa estimulação visual (sua classe no CSS)
+            document.body.classList.add("low-stimulus");
+            
+            // 2. Inicia o Ruído Marrom automaticamente (suave, bom para aterramento)
+            const noiseSelect = document.getElementById("noiseType");
+            const noiseBtn = document.getElementById("noiseBtn");
+            
+            if (noiseSelect && noiseBtn) {
+                noiseSelect.value = "brown"; 
+                // Só clica em "Tocar" se o áudio estiver pausado
+                if (noiseBtn.innerText.includes("Tocar")) {
+                    noiseBtn.click();
+                }
+            }
+
+            // 3. Rola a tela suavemente até a âncora de respiração
+            const focusCard = document.querySelector(".focus-card");
+            if (focusCard) {
+                focusCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
     }
