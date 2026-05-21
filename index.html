@@ -18,6 +18,41 @@
   </style>
 </head>
 <body>
+    <div id="sensoryOverlay" class="sensory-overlay hidden">
+    <div class="card onboarding-card">
+      <h2>Bem-vindo ao Sereno 🍃</h2>
+      <p>Para começarmos, configure seu ambiente de forma confortável. Você poderá mudar isso a qualquer momento.</p>
+      
+      <form id="sensoryForm">
+        <div class="form-group">
+          <label for="sensoryVisual">1. Como prefere os estímulos visuais hoje?</label>
+          <select id="sensoryVisual" required>
+            <option value="normal">Razoável (Cores normais do app)</option>
+            <option value="high">Alta Sensibilidade (Cores suaves / Baixa estimulação)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="sensoryNoise">2. Qual som bloqueia melhor os ruídos externos para você?</label>
+          <select id="sensoryNoise" required>
+            <option value="brown">Ruído Marrom (Grave/Suave)</option>
+            <option value="ocean">Ondas do Mar (Oscilante)</option>
+            <option value="rain">Chuva Constante</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="sensoryAI">3. Como você prefere receber respostas em momentos de fadiga?</label>
+          <select id="sensoryAI" required>
+            <option value="direct">Textos curtos, direto ao ponto e em tópicos</option>
+            <option value="detailed">Textos mais acolhedores e explicativos</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%; margin-top: 15px;">Concluir e Entrar</button>
+      </form>
+    </div>
+  </div>
   <button id="panicBtn" class="panic-btn" title="Pausa Sensorial">
     <span>🆘 Pausa Rápida</span>
   </button>

@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     carregarDashboard();
     setupEnergyBudget();
     setupPanicButton();
+    setupSensoryProfile();
 });
 
 // ===============================
@@ -647,29 +648,78 @@ function setupEnergyBudget() {
 }
 
 // ===============================
-// 8. Botão de Pausa Sensorial (Pânico)
+// 8. Perfil Sensorial & Botão de Emergência Customizado
 // ===============================
+
+function setupSensoryProfile() {
+    const overlay = document.getElementById("sensoryOverlay");
+    const form = document.getElementById("sensoryForm");
+    const profileSaved = localStorage.getItem("sereno_sensory_profile");
+
+    // Se NÃO tem perfil salvo, exibe o questionário tirando a classe 'hidden'
+    if (!profileSaved) {
+        overlay.classList.remove("hidden");
+    } else {
+        // Se já tem, aplica as preferências visuais salvas direto ao carregar
+        aplicarPreferenciasSensoriais(JSON.parse(profileSaved));
+    }
+
+    if (form) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            
+            const perfil = {
+                visual: document.getElementById("sensoryVisual").value,
+                somEmergencia: document.getElementById("sensoryNoise").value,
+                estiloIA: document.getElementById("sensoryAI").value
+            };
+
+            // Salva as escolhas localmente
+            localStorage.setItem("sereno_sensory_profile", JSON.stringify(perfil));
+            
+            // Aplica as alterações visualmente na hora
+            aplicarPreferenciasSensoriais(perfil);
+            
+            // Esconde o questionário
+            overlay.classList.add("hidden");
+        });
+    }
+}
+
+function aplicarPreferenciasSensoriais(perfil) {
+    if (!perfil) return;
+
+    // Se escolheu sensibilidade visual alta, força o modo baixa estimulação
+    if (perfil.visual === "high") {
+        document.body.classList.add("low-stimulus");
+    }
+}
+
+// ATUALIZAÇÃO: O botão de pânico agora obedece o questionário!
 function setupPanicButton() {
     const panicBtn = document.getElementById("panicBtn");
     
     if (panicBtn) {
         panicBtn.addEventListener("click", () => {
-            // 1. Ativa o modo de baixa estimulação visual (sua classe no CSS)
             document.body.classList.add("low-stimulus");
             
-            // 2. Inicia o Ruído Marrom automaticamente (suave, bom para aterramento)
+            // Recupera o som preferido do questionário (se não achar, usa 'brown' como padrão)
+            let somPreferido = "brown";
+            const perfilSalvo = localStorage.getItem("sereno_sensory_profile");
+            if (perfilSalvo) {
+                somPreferido = JSON.parse(perfilSalvo).somEmergencia;
+            }
+
             const noiseSelect = document.getElementById("noiseType");
             const noiseBtn = document.getElementById("noiseBtn");
             
             if (noiseSelect && noiseBtn) {
-                noiseSelect.value = "brown"; 
-                // Só clica em "Tocar" se o áudio estiver pausado
+                noiseSelect.value = somPreferido; // Ativa o som configurado no questionário!
                 if (noiseBtn.innerText.includes("Tocar")) {
                     noiseBtn.click();
                 }
             }
 
-            // 3. Rola a tela suavemente até a âncora de respiração
             const focusCard = document.querySelector(".focus-card");
             if (focusCard) {
                 focusCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
