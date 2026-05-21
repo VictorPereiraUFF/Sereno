@@ -129,7 +129,14 @@ main { display: grid; gap: 20px; }
 
 /* === MEDIA QUERY PARA DESKTOP === */
 @media (min-width: 768px) {
-  
+  .top-dashboard-grid {
+    grid-template-rows: auto 1fr; /* Força a primeira linha a ficar justa e joga o espaço restante para baixo */
+  }
+
+  .focus-card, 
+  .regulation-card {
+    align-self: start; /* Impede que os cards estiquem e os mantém colados no topo de suas respectivas linhas */
+  }
 }
 
 /* === MODO BAIXA ESTIMULAÇÃO === */
