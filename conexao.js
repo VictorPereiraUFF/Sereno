@@ -654,16 +654,22 @@ function setupEnergyBudget() {
 function setupSensoryProfile() {
     const overlay = document.getElementById("sensoryOverlay");
     const form = document.getElementById("sensoryForm");
+    
+    // 💡 TRUQUE DE DESENVOLVIMENTO:
+    // Descomente a linha abaixo se quiser que o questionário apareça SEMPRE ao dar F5 para testar o layout
+    localStorage.removeItem("sereno_sensory_profile");
+
     const profileSaved = localStorage.getItem("sereno_sensory_profile");
 
-    // Se NÃO tem perfil salvo, exibe o questionário tirando a classe 'hidden'
+    // Se NÃO tem perfil salvo, exibe o questionário
     if (!profileSaved) {
-        overlay.classList.remove("hidden");
+        if (overlay) overlay.classList.remove("hidden");
     } else {
-        // Se já tem, aplica as preferências visuais salvas direto ao carregar
+        // Se já tem, aplica as preferências direto
         aplicarPreferenciasSensoriais(JSON.parse(profileSaved));
     }
 
+    // Listener do envio do formulário
     if (form) {
         form.addEventListener("submit", (e) => {
             e.preventDefault();
@@ -674,14 +680,35 @@ function setupSensoryProfile() {
                 estiloIA: document.getElementById("sensoryAI").value
             };
 
-            // Salva as escolhas localmente
             localStorage.setItem("sereno_sensory_profile", JSON.stringify(perfil));
-            
-            // Aplica as alterações visualmente na hora
             aplicarPreferenciasSensoriais(perfil);
-            
-            // Esconde o questionário
-            overlay.classList.add("hidden");
+            if (overlay) overlay.classList.add("hidden");
+        });
+    }
+
+    // AÇÃO DO NOVO BOTÃO: Reabrir o questionário para edição
+    const reopenBtn = document.getElementById("reopenSensoryBtn");
+    if (reopenBtn && overlay) {
+        reopenBtn.addEventListener("click", () => {
+            // Se já existiam preferências, preenche o form com o que estava salvo
+            if (profileSaved) {
+                const dados = JSON.parse(profileSaved);
+                if(document.getElementById("sensoryVisual")) document.getElementById("sensoryVisual").value = dados.visual;
+                if(document.getElementById("sensoryNoise")) document.getElementById("sensoryNoise").value = dados.somEmergencia;
+                if(document.getElementById("sensoryAI")) document.getElementById("sensoryAI").value = dados.estiloIA;
+            }
+            overlay.classList.remove("hidden"); // Traz a tela de volta!
+        });
+    }
+
+    // AÇÃO DO BOTÃO DE LIMPAR: Apaga tudo do localStorage de forma limpa pelo app
+    const clearBtn = document.getElementById("clearDataBtn");
+    if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+            if (confirm("Tem certeza que deseja redefinir o Sereno? Isso apagará suas preferências sensoriais e temas.")) {
+                localStorage.clear();
+                window.location.reload(); // Recarrega a página zerada
+            }
         });
     }
 }

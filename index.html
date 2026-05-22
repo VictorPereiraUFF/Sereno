@@ -213,10 +213,13 @@
 
     <footer class="app-footer">
       <aside style="display: flex; justify-content: center; margin-bottom: 20px;">
-        <div class="card" style="max-width: 400px; text-align: left;">
-          <h3 style="margin-top: 0;">Privacidade</h3>
-          <p>Seus dados de bateria social e conversas ficam apenas no seu banco de dados local.</p>
-          <button class="btn warn" style="margin-top:10px;">Limpar Dados Locais</button>
+        <div class="card">
+          <h3>Configurações e Privacidade</h3>
+          <p>Seus dados de bateria social e conversas ficam apenas de forma local.</p>
+          
+          <button class="btn ghost" id="reopenSensoryBtn" style="margin-top:10px; width:100%">⚙️ Alterar Preferências Sensoriais</button>
+          
+          <button class="btn warn" id="clearDataBtn" style="margin-top:10px; width:100%">Limpar Todos os Dados</button>
         </div>
       </aside>
       <p>Sereno — Assistente de apoio cotidiano. Não substitui terapia convencional.</p>
