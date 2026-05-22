@@ -689,9 +689,27 @@ function setupSensoryProfile() {
 function aplicarPreferenciasSensoriais(perfil) {
     if (!perfil) return;
 
-    // Se escolheu sensibilidade visual alta, força o modo baixa estimulação
+    // 1. SINCRONIZA O SOM: Altera o select da interface principal para a escolha do usuário
+    const noiseSelect = document.getElementById("noiseType");
+    if (noiseSelect && perfil.somEmergencia) {
+        noiseSelect.value = perfil.somEmergencia;
+        
+        // Dispara um evento de mudança caso seu script de áudio precise detectar a troca
+        noiseSelect.dispatchEvent(new Event('change'));
+    }
+
+    // 2. SINCRONIZA O VISUAL: Aplica o modo de baixa estimulação e conforto visual
     if (perfil.visual === "high") {
         document.body.classList.add("low-stimulus");
+        
+        // Ativa o Dark Mode junto para dar o conforto imediato contra a luz forte
+        document.body.classList.add("dark-mode");
+        
+        // Sincroniza o ícone do botão de tema lá do topo
+        const themeBtn = document.getElementById("themeBtn");
+        if (themeBtn) themeBtn.innerText = "☀️";
+    } else {
+        document.body.classList.remove("low-stimulus");
     }
 }
 

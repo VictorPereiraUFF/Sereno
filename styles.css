@@ -139,8 +139,20 @@ main { display: grid; gap: 20px; }
   }
 }
 
-/* === MODO BAIXA ESTIMULAÇÃO === */
-body.low-stimulus { --accent: #9CA3AF; }
+/* === MODO BAIXA ESTIMULAÇÃO (Atualizado para suavizar o contraste) === */
+body.low-stimulus { 
+  --accent: #9CA3AF; /* Transforma o verde vibrante em cinza neutro */
+  --accent-hover: #7B818A;
+  --bg-color: #EFEFEF; /* Um fundo cinza claro bem fosco, menos agressivo que o branco */
+}
+
+/* Ajuste fino para quando a baixa estimulação estiver combinada com o modo escuro */
+body.low-stimulus.dark-mode {
+  --bg-color: #161616;
+  --card-bg: #222222;
+  --text-main: #CCCCCC; /* Texto cinza claro em vez de branco puro para não ofuscar */
+  --border-color: #2E2E2E;
+}
 
 /* === MEDIA QUERY PARA CELULAR (MOBILE) === */
 @media (max-width: 767px) {
