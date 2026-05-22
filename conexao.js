@@ -45,10 +45,7 @@ function setupTheme() {
 }
 
 // ===============================
-// 0. Bateria Social
-// ===============================
-// ===============================
-// 0. Bateria Social
+// 0. Bateria Social (Com Persistência Temporária)
 // ===============================
 function setupBattery() {
     const slider = document.getElementById("socialBattery");
@@ -58,7 +55,28 @@ function setupBattery() {
 
     if (!slider) return;
 
-    // Dispara enquanto o usuário arrasta a barra
+    // --- CONFIGURAÇÃO DO TEMPO DE EXPIRAÇÃO ---
+    // Define por quanto tempo (em horas) o valor deve ser lembrado
+    const HORAS_EXPIRACAO = 4; 
+    const TEMPO_LIMITE_MS = HORAS_EXPIRACAO * 60 * 60 * 1000; 
+
+    const bateriaSalva = localStorage.getItem("sereno_bateria_valor");
+    const timestampSalvo = localStorage.getItem("sereno_bateria_timestamp");
+
+    if (bateriaSalva && timestampSalvo) {
+        const agora = Date.now();
+        // Se o tempo decorrido for menor que o limite, recupera o valor salvo
+        if (agora - parseInt(timestampSalvo) < TEMPO_LIMITE_MS) {
+            slider.value = bateriaSalva;
+        } else {
+            // Se o tempo expirou, remove os registros antigos e volta para 80%
+            slider.value = 80;
+            localStorage.removeItem("sereno_bateria_valor");
+            localStorage.removeItem("sereno_bateria_timestamp");
+        }
+    }
+
+    // Dispara enquanto o usuário arrasta a barra ou quando atualizado via IA
     slider.addEventListener("input", () => {
         const val = parseInt(slider.value);
         pct.innerText = val + "%";
@@ -77,7 +95,14 @@ function setupBattery() {
         } else if (val < 20) {
             pct.style.color = "#f44336"; // Vermelho (Crítico)
         }
+
+        // --- SALVA O ESTADO ATUAL E O MOMENTO DA MUDANÇA ---
+        localStorage.setItem("sereno_bateria_valor", val);
+        localStorage.setItem("sereno_bateria_timestamp", Date.now());
     });
+
+    // Atualiza imediatamente os componentes visuais (ícones/cores) ao carregar a página
+    slider.dispatchEvent(new Event('input'));
 
     // Dispara quando o usuário solta a barra
     slider.addEventListener("change", async () => {
@@ -93,7 +118,7 @@ function setupBattery() {
                 body: JSON.stringify({ level: val })
             });
             
-            // 2. ATUALIZA O GRÁFICO EM TEMPO REAL! <-- ADICIONE ESTA LINHA
+            // 2. ATUALIZA O GRÁFICO EM TEMPO REAL!
             carregarDashboard();
 
             // 3. Chama a função que fala com o Webhook do Make
