@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupBattery();     
     setupMicSimulation();
     setupLightSimulation();
+    setupVisualMasking();
     loadScripts();
     setupChat();
     setupTranslator();
@@ -926,4 +927,25 @@ function setupLightSimulation() {
             cancelAnimationFrame(animationFrameId);
         }
     }
+}
+
+// ===============================
+// 10. Mascaramento Visual Regulatório
+// ===============================
+function setupVisualMasking() {
+    const openBtn = document.getElementById("visualMaskBtn");
+    const closeBtn = document.getElementById("closeVisualMaskBtn");
+    const overlay = document.getElementById("visualMaskOverlay");
+
+    if (!openBtn || !overlay || !closeBtn) return;
+
+    // Abre o modo de calmaria removendo a classe que esconde
+    openBtn.addEventListener("click", () => {
+        overlay.classList.remove("visual-mask-hidden");
+    });
+
+    // Fecha o modo de calmaria readicionando a classe
+    closeBtn.addEventListener("click", () => {
+        overlay.classList.add("visual-mask-hidden");
+    });
 }

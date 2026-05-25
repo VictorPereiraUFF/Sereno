@@ -105,7 +105,8 @@
               <div id="planResult" class="hidden" style="margin-top: 12px; padding: 12px; border-radius: 8px; background: var(--bg-panel); font-size: 13px; line-height: 1.5; border-left: 4px solid #4caf50;"></div>
             </div>
           </article>
-
+          
+        <aside>
           <article class="card regulation-card">
             <div class="section-title">
               <h2>Regulação</h2>
@@ -140,6 +141,23 @@
               <button class="btn ghost" id="noiseBtn">▶ Tocar</button>
             </div>
           </article>
+
+          <article class="card">
+            <div class="section-title">
+              <h2>🎨 Mascaramento Visual Regulatório</h2>
+            </div>
+            <p>Ative uma animação geométrica minimalista de ritmo lento para ajudar a reduzir a sobrecarga visual e acalmar a mente.</p>
+            <button class="btn ghost" id="visualMaskBtn" style="width: 100%;">Acessar Espaço de Calmaria</button>
+          </article>
+        </aside>
+
+          <div id="visualMaskOverlay" class="visual-mask-hidden">
+            <button id="closeVisualMaskBtn" class="close-mask-btn">✕ Sair do Modo Calmaria</button>
+            <div class="calm-container">
+              <div class="breathing-circle"></div>
+              <p class="breathing-guide">Acompanhe o movimento... Inspire... Expire...</p>
+            </div>
+          </div>
 
         </div> 
         <article class="card">

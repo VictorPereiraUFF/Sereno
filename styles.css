@@ -317,3 +317,170 @@ body.low-stimulus.dark-mode {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Container de Tela Cheia */
+#visualMaskOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #12161A; /* Fundo escuro e fosco para descansar os olhos */
+  z-index: 9999; /* Fica acima de absolutamente tudo */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Container do Círculo e do Texto */
+.calm-container {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+/* O Círculo de Respiração */
+.breathing-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #71D1B3 0%, #4a9e85 100%); /* Usa o Verde Água do Sereno */
+  box-shadow: 0 0 60px rgba(113, 209, 179, 0.4);
+  animation: breatheVisual 8s infinite ease-in-out; /* Ciclo de 8 segundos ajustado para acalmar */
+}
+
+/* Texto guia */
+.breathing-guide {
+  color: #E2E8F0;
+  font-size: 1.2rem;
+  font-family: sans-serif;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+/* Botão de fechar elegante no topo */
+.close-mask-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.close-mask-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Animação Matemática de Expansão/Contração Sensorial */
+@keyframes breatheVisual {
+  0%, 100% {
+    transform: scale(0.8);
+    box-shadow: 0 0 30px rgba(113, 209, 179, 0.2);
+  }
+  50% {
+    transform: scale(1.4);
+    box-shadow: 0 0 80px rgba(113, 209, 179, 0.6);
+  }
+}
+
+/* =========================================
+   MASCARAMENTO VISUAL REGULATÓRIO (SERENO)
+   ========================================= */
+
+/* Container de Tela Cheia */
+#visualMaskOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #12161A; /* Fundo escuro fosco para descansar os olhos */
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s;
+}
+
+/* Classe que esconde a tela de forma limpa */
+.visual-mask-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Container do Círculo e do Texto */
+.calm-container {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+/* O Círculo de Respiração */
+.breathing-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #71D1B3 0%, #4a9e85 100%);
+  box-shadow: 0 0 60px rgba(113, 209, 179, 0.4);
+  animation: breatheVisual 8s infinite ease-in-out;
+}
+
+/* Texto guia */
+.breathing-guide {
+  color: #E2E8F0;
+  font-size: 1.2rem;
+  font-family: sans-serif;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+
+/* Botão de fechar elegante */
+.close-mask-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.close-mask-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes breatheVisual {
+  0%, 100% {
+    transform: scale(0.8);
+    box-shadow: 0 0 30px rgba(113, 209, 179, 0.2);
+  }
+  50% {
+    transform: scale(1.4);
+    box-shadow: 0 0 80px rgba(113, 209, 179, 0.6);
+  }
+}
+
+aside .card {
+  margin-bottom: 20px;
+}
+
+aside .card:last-child {
+  margin-bottom: 0;
+}
