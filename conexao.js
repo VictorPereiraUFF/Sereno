@@ -704,7 +704,8 @@ function setupSensoryProfile() {
             const perfil = {
                 visual: document.getElementById("sensoryVisual").value,
                 somEmergencia: document.getElementById("sensoryNoise").value,
-                estiloIA: document.getElementById("sensoryAI").value
+                estiloIA: document.getElementById("sensoryAI").value,
+                animacaoVisual: document.getElementById("sensoryVisualAnimation").value
             };
 
             localStorage.setItem("sereno_sensory_profile", JSON.stringify(perfil));
@@ -723,6 +724,7 @@ function setupSensoryProfile() {
                 if(document.getElementById("sensoryVisual")) document.getElementById("sensoryVisual").value = dados.visual;
                 if(document.getElementById("sensoryNoise")) document.getElementById("sensoryNoise").value = dados.somEmergencia;
                 if(document.getElementById("sensoryAI")) document.getElementById("sensoryAI").value = dados.estiloIA;
+                if(document.getElementById("sensoryVisualAnimation") && dados.animacaoVisual) document.getElementById("sensoryVisualAnimation").value = dados.animacaoVisual;
             }
             overlay.classList.remove("hidden"); // Traz a tela de volta!
         });
@@ -764,6 +766,12 @@ function aplicarPreferenciasSensoriais(perfil) {
         if (themeBtn) themeBtn.innerText = "☀️";
     } else {
         document.body.classList.remove("low-stimulus");
+    }
+
+    // 3. SINCRONIZA A ANIMAÇÃO VISUAL: Altera o select da interface principal para a escolha do usuário
+    const visualSelect = document.getElementById("visualType");
+    if (visualSelect && perfil.animacaoVisual) {
+        visualSelect.value = perfil.animacaoVisual;
     }
 }
 
