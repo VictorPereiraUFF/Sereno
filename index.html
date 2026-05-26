@@ -144,20 +144,30 @@
 
           <article class="card">
             <div class="section-title">
-              <h2>🎨 Mascaramento Visual Regulatório</h2>
+              <h2>🎨 Mascaramento Visual</h2>
             </div>
-            <p>Ative uma animação geométrica minimalista de ritmo lento para ajudar a reduzir a sobrecarga visual e acalmar a mente.</p>
-            <button class="btn ghost" id="visualMaskBtn" style="width: 100%;">Acessar Espaço de Calmaria</button>
+            <p>Ative uma animação geométrica minimalista para ajudar a reduzir a sobrecarga visual.</p>
+            
+            <div style="margin-top: 15px;">
+              <strong>Padrão de Animação</strong>
+              <select id="visualType" style="margin-top: 8px; width: 100%; padding: 5px; border-radius: 6px; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); outline: none;">
+                <option value="breathe">Respiração (Expansão e Contração)</option>
+                <option value="blob">Ondas Flutuantes (Forma Orgânica)</option>
+                <option value="aurora">Aurora (Transição Suave de Cores)</option>
+              </select>
+            </div>
+
+            <button class="btn ghost" id="visualMaskBtn" style="width: 100%; margin-top: 15px;">Acessar Espaço de Calmaria</button>
           </article>
         </aside>
 
-          <div id="visualMaskOverlay" class="visual-mask-hidden">
-            <button id="closeVisualMaskBtn" class="close-mask-btn">✕ Sair do Modo Calmaria</button>
-            <div class="calm-container">
-              <div class="breathing-circle"></div>
-              <p class="breathing-guide">Acompanhe o movimento... Inspire... Expire...</p>
-            </div>
+        <div id="visualMaskOverlay" class="visual-mask-hidden">
+          <button id="closeVisualMaskBtn" class="close-mask-btn">✕ Sair do Modo Calmaria</button>
+          <div class="calm-container">
+            <div id="visualShape" class="shape-breathe"></div>
+            <p class="breathing-guide">Acompanhe o movimento... Inspire... Expire...</p>
           </div>
+        </div>
 
         </div> 
         <article class="card">

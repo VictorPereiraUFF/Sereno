@@ -936,15 +936,29 @@ function setupVisualMasking() {
     const openBtn = document.getElementById("visualMaskBtn");
     const closeBtn = document.getElementById("closeVisualMaskBtn");
     const overlay = document.getElementById("visualMaskOverlay");
+    
+    // Novos elementos capturados
+    const visualTypeSelect = document.getElementById("visualType");
+    const shapeElement = document.getElementById("visualShape");
 
     if (!openBtn || !overlay || !closeBtn) return;
 
-    // Abre o modo de calmaria removendo a classe que esconde
+    // Abre o modo de calmaria
     openBtn.addEventListener("click", () => {
+        
+        // Lê qual animação o usuário escolheu no menu
+        if (visualTypeSelect && shapeElement) {
+            const chosenType = visualTypeSelect.value;
+            // Limpa as classes anteriores e aplica a nova
+            shapeElement.className = ""; 
+            shapeElement.classList.add("shape-" + chosenType);
+        }
+
+        // Exibe a tela
         overlay.classList.remove("visual-mask-hidden");
     });
 
-    // Fecha o modo de calmaria readicionando a classe
+    // Fecha o modo de calmaria
     closeBtn.addEventListener("click", () => {
         overlay.classList.add("visual-mask-hidden");
     });
