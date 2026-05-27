@@ -287,7 +287,7 @@ function setupChat() {
 
         // LÊ A PREFERÊNCIA DO USUÁRIO SALVA NO NAVEGADOR
         const perfilSaved = JSON.parse(localStorage.getItem("sereno_sensory_profile") || "{}");
-        const estiloEscolhido = perfilSaved.estiloIA || "direct"; // Se não tiver, usa 'direct' como padrão
+        const estiloEscolhido = perfilSaved.estiloIA || "direct"; 
 
         try {
             const res = await fetch(`${API_URL}/api/ia`, {
@@ -296,7 +296,7 @@ function setupChat() {
                 body: JSON.stringify({ 
                     texto: text, 
                     imagem: imgToSend,
-                    estilo: estiloEscolhido // ENVIA A VARIÁVEL PARA O PYTHON AQUI!
+                    estilo: estiloEscolhido
                 })
             });
             const data = await res.json();
@@ -828,8 +828,10 @@ function setupLightSimulation() {
     let streamActive = false;
     let localStream = null;
     let animationFrameId = null;
+    
+    // NOVO: Variável de cooldown para não sobrecarregar o servidor
+    let ultimoAlertaLuz = 0; 
 
-    // Criamos um canvas em memória (não adicionado ao HTML) para analisar os pixels
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -838,7 +840,6 @@ function setupLightSimulation() {
     lightBtn.addEventListener("click", async () => {
         if (!streamActive) {
             try {
-                // Solicita acesso à câmera do usuário
                 localStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { width: 300, height: 200, facingMode: "user" } 
                 });
@@ -849,7 +850,6 @@ function setupLightSimulation() {
                 lightBtn.classList.remove("ghost");
                 lightBtn.classList.add("warn");
 
-                // Inicia o loop de análise assim que o vídeo começar a reproduzir
                 video.onloadedmetadata = () => {
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
@@ -861,7 +861,6 @@ function setupLightSimulation() {
                 display.innerText = "Acesso à câmera negado ou indisponível.";
             }
         } else {
-            // Desliga o monitoramento se já estiver ativo
             pararMonitoramento();
         }
     });
@@ -869,41 +868,33 @@ function setupLightSimulation() {
     function processarBrilho() {
         if (!streamActive) return;
 
-        // Desenha o frame do vídeo atual no canvas invisível
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         try {
-            // Captura a matriz de pixels (R, G, B, A de cada ponto da tela)
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
             let somaBrilho = 0;
             let totalPixels = 0;
 
-            // Avança de 4 em 4 posições (R, G, B, A) pulando alguns pixels para otimizar performance
             for (let i = 0; i < data.length; i += 20) {
                 const r = data[i];
                 const g = data[i+1];
                 const b = data[i+2];
 
-                // Fórmula matemática de Luminância Humana Perceptiva (CCIR 601)
                 const brilhoPixel = (0.299 * r) + (0.587 * g) + (0.114 * b);
                 somaBrilho += brilhoPixel;
                 totalPixels++;
             }
 
-            // Mapeia o brilho médio para uma escala de 0 a 100%
             const brilhoMedio = Math.round((somaBrilho / totalPixels) / 255 * 100);
             
-            // Atualiza a interface
             display.innerText = `Brilho: ${brilhoMedio}%`;
 
-            // Avaliação de risco sensorial
-            if (brilhoMedio > 75) { // 🚨 ALERTA: Luz excessiva detectada
+            if (brilhoMedio > 75) { 
                 display.innerText += " - Ambiente Muito Claro!";
                 display.style.color = "var(--danger)";
                 icon.innerText = "⚠️💥";
                 
-                // Gatilho: Se a bateria social estiver vulnerável, sugere o modo Baixa Estimulação
                 const sliderBateria = document.getElementById("socialBattery");
                 if (sliderBateria && parseInt(sliderBateria.value) < 50) {
                     if (!document.body.classList.contains("low-stimulus")) {
@@ -911,6 +902,29 @@ function setupLightSimulation() {
                         console.log("Sereno Engine: Modo Baixa Estimulação ativado por excesso de luz.");
                     }
                 }
+
+                // ==========================================
+                // NOVO: Integração com o Backend (com Cooldown de 3s)
+                // ==========================================
+                const agora = Date.now();
+                if (agora - ultimoAlertaLuz > 3000) {
+                    ultimoAlertaLuz = agora;
+                    
+                    // Envia o evento para o Python
+                    fetch(`${API_URL}/events`, {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({type: "luz_alta", value: brilhoMedio})
+                    }).catch(()=>{});
+
+                    // Atualiza o contador visual na tela (o mesmo usado pelo microfone)
+                    const logCount = document.getElementById('logCount');
+                    if (logCount) {
+                        logCount.textContent = parseInt(logCount.textContent || 0) + 1;
+                    }
+                }
+                // ==========================================
+
             } else if (brilhoMedio < 20) {
                 display.style.color = "var(--text-muted)";
                 icon.innerText = "🌙";
@@ -923,7 +937,6 @@ function setupLightSimulation() {
             console.error("Erro ao analisar os pixels: ", e);
         }
 
-        // Continua o loop recursivo de captura no próximo frame da tela
         animationFrameId = requestAnimationFrame(processarBrilho);
     }
 
