@@ -32,3 +32,8 @@ class ChatRequest(BaseModel):
 
 class BatteryRequest(BaseModel):
     level: int
+
+class ChatRequest(BaseModel):
+    texto: str
+    imagem: Optional[str] = None
+    estilo: Optional[str] = None  # NOVO: Recebe a preferência do usuário

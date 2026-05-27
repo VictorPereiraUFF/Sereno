@@ -285,11 +285,19 @@ function setupChat() {
 
         const loadingDiv = appendMessage("Processando...", false);
 
+        // LÊ A PREFERÊNCIA DO USUÁRIO SALVA NO NAVEGADOR
+        const perfilSaved = JSON.parse(localStorage.getItem("sereno_sensory_profile") || "{}");
+        const estiloEscolhido = perfilSaved.estiloIA || "direct"; // Se não tiver, usa 'direct' como padrão
+
         try {
             const res = await fetch(`${API_URL}/api/ia`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ texto: text, imagem: imgToSend })
+                body: JSON.stringify({ 
+                    texto: text, 
+                    imagem: imgToSend,
+                    estilo: estiloEscolhido // ENVIA A VARIÁVEL PARA O PYTHON AQUI!
+                })
             });
             const data = await res.json();
             loadingDiv.innerText = data.resposta;

@@ -18,17 +18,24 @@ client = genai.Client(api_key=CHAVE_GEMINI)
 # Modelo atualizado para evitar o erro 404 encontrado anteriormente
 MODELO_ATUAL = 'gemini-2.5-flash'
 
-def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None) -> str:
+def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None, estilo: Optional[str] = None) -> str:
     """Processa texto e imagem usando o modelo Gemini mais recente."""
     if not CHAVE_GEMINI:
         return "Erro: Chave de API não configurada no ficheiro .env!"
 
+    # Base do prompt (O que a IA sempre deve fazer)
     system_prompt = (
         "Você é o Sereno AI, focado em acessibilidade e regulação sensorial. "
         "1. Se receber imagem, analise APENAS gatilhos sensoriais (luzes, padrões, bagunça). "
         "2. Se receber texto, sugira calma e estratégias sociais. "
-        "3. NÃO dê diagnósticos médicos. Seja breve."
+        "3. NÃO dê diagnósticos médicos. "
     )
+
+    # Injeção dinâmica de estilo baseada na escolha do usuário
+    if estilo == "detailed":
+        system_prompt += "4. IMPORTANTE: O usuário prefere textos mais acolhedores, empáticos e explicativos. Desenvolva bem a resposta."
+    else:
+        system_prompt += "4. IMPORTANTE: O usuário prefere textos curtos, diretos ao ponto e estruturados em tópicos rápidos. Seja extremamente objetivo e evite excessos."
 
     contents = []
     
@@ -51,7 +58,6 @@ def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None) -> str:
         )
         return response.text
     except Exception as e:
-        # Retorna o erro real para facilitar a depuração, se necessário
         print(f"Erro Gemini Chat: {e}")
         return f"Tive uma dificuldade técnica para processar isso agora. Detalhe: {str(e)}"
 

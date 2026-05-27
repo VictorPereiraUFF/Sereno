@@ -55,7 +55,8 @@ def home():
 # Rota de IA (Chat Geral)
 @app.post("/api/ia")
 def chat_endpoint(payload: ChatRequest):
-    resposta = gerar_resposta_gpt(payload.texto, payload.imagem)
+    # Passamos o payload.estilo como terceiro argumento para o serviço
+    resposta = gerar_resposta_gpt(payload.texto, payload.imagem, payload.estilo)
     return {"resposta": resposta}
 
 # Rota de IA (Tradutor de Polidez)
