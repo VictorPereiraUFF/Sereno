@@ -237,6 +237,24 @@
 
         <article class="card">
           <div class="section-title">
+            <h2>📖 Diário de Gatilhos</h2>
+            <small>Identificação de Padrões</small>
+          </div>
+          <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
+            Acompanhe o que tem afetado sua bateria social e peça para a IA analisar seus ofensores sensoriais.
+          </p>
+          
+          <div id="triggerList" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; padding-right: 5px;">
+            <p style="color: var(--text-muted); font-size: 13px; text-align: center;">Carregando histórico...</p>
+          </div>
+
+          <button class="btn ghost" id="analyzeTriggersBtn" style="width: 100%;">✨ Analisar Padrões com IA</button>
+          
+          <div id="triggerAnalysisResult" class="hidden" style="margin-top: 15px; padding: 15px; border-radius: 8px; background: var(--script-bg); border-left: 4px solid var(--accent); font-size: 14px; line-height: 1.5;"></div>
+        </article>
+
+        <article class="card">
+          <div class="section-title">
             <h2>Tradutor Social</h2>
             <small>De direto para polido</small>
           </div>

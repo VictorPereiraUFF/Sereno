@@ -151,3 +151,29 @@ def prever_sobrecarga_mmq(historico_bateria: list) -> dict:
         }
     
     return {"alerta": False, "mensagem": "Energia estável."}
+
+def analisar_padroes_gatilhos(historico_texto: str) -> str:
+    if not CHAVE_GEMINI:
+        return "Conexão com a IA indisponível."
+
+    system_prompt = (
+        "Você é um analista de padrões sensoriais do aplicativo Sereno. "
+        "Você receberá um log de eventos (luzes fortes, barulhos, quedas de bateria). "
+        "Sua missão é explicar para o usuário, de forma gentil, compreensível e em 1 ou 2 parágrafos curtos, "
+        "o que parece estar causando os maiores desgastes na energia dele. "
+        "Dê uma sugestão prática baseada nos dados."
+    )
+
+    try:
+        response = client.models.generate_content(
+            model=MODELO_ATUAL,
+            contents=f"Analise este histórico e encontre o padrão: {historico_texto}",
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=0.3, # Temperatura baixa para ser mais analítico e preciso
+            )
+        )
+        return response.text
+    except Exception as e:
+        print(f"Erro Gemini Análise de Gatilhos: {e}")
+        return "Não consegui analisar os padrões no momento."

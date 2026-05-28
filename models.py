@@ -36,4 +36,10 @@ class BatteryRequest(BaseModel):
 class ChatRequest(BaseModel):
     texto: str
     imagem: Optional[str] = None
-    estilo: Optional[str] = None  # NOVO: Recebe a preferência do usuário
+    estilo: Optional[str] = None  
+
+class TriggerEvent(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tipo: str # Ex: 'luz_alta', 'som_alto', 'queda_bateria'
+    valor: int # Nível do gatilho (ex: 85% de brilho)
+    timestamp: datetime = Field(default_factory=datetime.utcnow)

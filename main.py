@@ -3,11 +3,11 @@ import time
 from fastapi import FastAPI, Depends, Body # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from sqlmodel import Session, select # type: ignore
-from security import proteger_dado, revelar_dado # type: ignore
+from services import analisar_padroes_gatilhos # type: ignore
 
 # --- IMPORTAÇÕES LOCAIS ---
 from database import create_db_and_tables, get_session
-from models import User, Script, SocialBattery, ChatRequest, BatteryRequest
+from models import Script, SocialBattery, ChatRequest, BatteryRequest, TriggerEvent
 from services import gerar_resposta_gpt, prever_sobrecarga_mmq, suavizar_texto_gpt, calcular_bateria_social_gpt
 
 # ---------- CONFIGURAÇÕES DO APP ----------
@@ -126,12 +126,39 @@ def add_script(message: str = Body(..., embed=True), session: Session = Depends(
     return novo_script
 
 @app.post("/events")
-def log_event(payload: dict = Body(...)):
-    print(f"Evento recebido: {payload}")
-    return {"status": "logged"}
+def log_event(payload: dict = Body(...), session: Session = Depends(get_session)):
+    tipo = payload.get("type", "desconhecido")
+    valor = payload.get("value", 0)
+    
+    novo_evento = TriggerEvent(tipo=tipo, valor=int(valor))
+    session.add(novo_evento)
+    session.commit()
+    
+    return {"status": "salvo no diario"}
 
+# Retorna os últimos eventos para o HTML
+@app.get("/api/triggers")
+def get_triggers(session: Session = Depends(get_session)):
+    # Pega os últimos 15 eventos
+    statement = select(TriggerEvent).order_by(TriggerEvent.timestamp.desc()).limit(15)
+    eventos = session.exec(statement).all()
+    return eventos
 
-# ---------- ROTA DO HARDWARE (NOVO) ----------
+# Pede para a IA ler os eventos e achar o padrão
+@app.post("/api/triggers/analyze")
+def analyze_triggers(session: Session = Depends(get_session)):
+    statement = select(TriggerEvent).order_by(TriggerEvent.timestamp.desc()).limit(20)
+    eventos = session.exec(statement).all()
+    
+    if not eventos:
+        return {"analise": "Ainda não há dados suficientes no seu diário para encontrar um padrão."}
+    
+    # Transforma os eventos em um texto simples para a IA ler
+    texto_historico = ", ".join([f"{e.tipo} (nível {e.valor}) às {e.timestamp.strftime('%H:%M')}" for e in eventos])
+    
+    analise = analisar_padroes_gatilhos(texto_historico)
+    return {"analise": analise}
+
 @app.post("/api/motor")
 def controlar_motor(dados: dict = Body(...)):
     estado = dados.get("estado")

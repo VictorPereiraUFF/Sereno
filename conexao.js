@@ -992,3 +992,91 @@ function setupVisualMasking() {
         overlay.classList.add("visual-mask-hidden");
     });
 }
+
+// ===============================
+// 11. Diário de Gatilhos
+// ===============================
+async function setupTriggerDiary() {
+    const listContainer = document.getElementById("triggerList");
+    const btnAnalyze = document.getElementById("analyzeTriggersBtn");
+    const resultBox = document.getElementById("triggerAnalysisResult");
+
+    if (!listContainer || !btnAnalyze) return;
+
+    // Função para carregar a lista do banco
+    async function carregarLista() {
+        try {
+            const res = await fetch(`${API_URL}/api/triggers`);
+            const eventos = await res.json();
+
+            listContainer.innerHTML = ""; // Limpa o "Carregando..."
+
+            if (eventos.length === 0) {
+                listContainer.innerHTML = "<p style='text-align:center; color:var(--text-muted); font-size:13px;'>Nenhum gatilho registrado ainda.</p>";
+                return;
+            }
+
+            eventos.forEach(evento => {
+                // Formata a data/hora
+                const hora = new Date(evento.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                // Escolhe o ícone e a cor com base no tipo
+                let icone = "📌";
+                let nomeFormatado = evento.tipo;
+                let cor = "var(--text-main)";
+
+                if (evento.tipo === "som_alto") {
+                    icone = "🔊";
+                    nomeFormatado = "Ruído Elevado";
+                    cor = "#ff9800";
+                } else if (evento.tipo === "luz_alta") {
+                    icone = "☀️";
+                    nomeFormatado = "Excesso de Luz";
+                    cor = "#f44336";
+                }
+
+                // Cria o item da lista
+                const item = document.createElement("div");
+                item.style.cssText = `display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px;`;
+                item.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size: 18px;">${icone}</span>
+                        <div>
+                            <strong style="color: ${cor}; font-size: 14px;">${nomeFormatado}</strong><br>
+                            <span style="font-size: 12px; color: var(--text-muted);">Nível medido: ${evento.valor}</span>
+                        </div>
+                    </div>
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">${hora}</span>
+                `;
+                listContainer.appendChild(item);
+            });
+
+        } catch (e) {
+            listContainer.innerHTML = "<p style='color:var(--danger);'>Erro ao carregar o diário.</p>";
+        }
+    }
+
+    // Chama a função de carregar assim que a página abre
+    carregarLista();
+
+    // Ação do botão de análise da IA
+    btnAnalyze.addEventListener("click", async () => {
+        btnAnalyze.innerText = "⏳ A IA está lendo seu diário...";
+        btnAnalyze.disabled = true;
+        resultBox.classList.remove("hidden");
+        resultBox.innerHTML = "<em>Procurando padrões nos horários e gatilhos...</em>";
+
+        try {
+            const res = await fetch(`${API_URL}/api/triggers/analyze`, { method: "POST" });
+            const data = await res.json();
+            
+            // Troca as quebras de linha por <br> para o HTML
+            resultBox.innerHTML = data.analise.replace(/\n/g, '<br>');
+        } catch (e) {
+            resultBox.innerHTML = "Erro ao conectar com o motor de análise.";
+        } finally {
+            btnAnalyze.innerText = "✨ Analisar Padrões com IA";
+            btnAnalyze.disabled = false;
+        }
+    });
+}
