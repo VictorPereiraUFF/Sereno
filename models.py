@@ -36,7 +36,8 @@ class BatteryRequest(BaseModel):
 class ChatRequest(BaseModel):
     texto: str
     imagem: Optional[str] = None
-    estilo: Optional[str] = None  
+    estilo: Optional[str] = None
+    bateria_atual: Optional[int] = None  # Nível da bateria social no momento do envio (0-100)
 
 class TriggerEvent(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

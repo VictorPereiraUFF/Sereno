@@ -287,7 +287,11 @@ function setupChat() {
 
         // LÊ A PREFERÊNCIA DO USUÁRIO SALVA NO NAVEGADOR
         const perfilSaved = JSON.parse(localStorage.getItem("sereno_sensory_profile") || "{}");
-        const estiloEscolhido = perfilSaved.estiloIA || "direct"; 
+        const estiloEscolhido = perfilSaved.estiloIA || "direct";
+
+        // LÊ O NÍVEL ATUAL DA BATERIA SOCIAL, para a IA adaptar o tom da resposta
+        const sliderBateria = document.getElementById("socialBattery");
+        const bateriaAtual = sliderBateria ? parseInt(sliderBateria.value) : null;
 
         try {
             const res = await fetch(`${API_URL}/api/ia`, {
@@ -296,13 +300,14 @@ function setupChat() {
                 body: JSON.stringify({ 
                     texto: text, 
                     imagem: imgToSend,
-                    estilo: estiloEscolhido
+                    estilo: estiloEscolhido,
+                    bateria_atual: bateriaAtual
                 })
             });
             const data = await res.json();
             loadingDiv.innerText = data.resposta;
         } catch (e) {
-            loadingDiv.innerText = "Erro: Servidor offline.";
+            loadingDiv.innerText = "Não consegui me conectar agora. Tente de novo em instantes.";
         }
     }
 
@@ -352,7 +357,7 @@ function setupTranslator() {
                 resultText.innerText = data.revisado;
                 resultBox.classList.remove("hidden");
             } catch (e) {
-                alert("Erro ao conectar com a IA.");
+                alert("Não consegui me conectar agora. Tente de novo em instantes.");
             } finally {
                 translateBtn.innerText = "✨ Suavizar";
                 translateBtn.disabled = false;
@@ -1052,7 +1057,7 @@ async function setupTriggerDiary() {
             });
 
         } catch (e) {
-            listContainer.innerHTML = "<p style='color:var(--danger);'>Erro ao carregar o diário.</p>";
+            listContainer.innerHTML = "<p style='color:var(--danger);'>Não consegui carregar o diário agora. Tente de novo em instantes.</p>";
         }
     }
 
@@ -1073,7 +1078,7 @@ async function setupTriggerDiary() {
             // Troca as quebras de linha por <br> para o HTML
             resultBox.innerHTML = data.analise.replace(/\n/g, '<br>');
         } catch (e) {
-            resultBox.innerHTML = "Erro ao conectar com o motor de análise.";
+            resultBox.innerHTML = "Não consegui analisar os padrões agora. Tente de novo em instantes.";
         } finally {
             btnAnalyze.innerText = "✨ Analisar Padrões com IA";
             btnAnalyze.disabled = false;

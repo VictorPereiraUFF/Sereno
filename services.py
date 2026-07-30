@@ -18,24 +18,67 @@ client = genai.Client(api_key=CHAVE_GEMINI)
 # Modelo atualizado para evitar o erro 404 encontrado anteriormente
 MODELO_ATUAL = 'gemini-2.5-flash'
 
-def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None, estilo: Optional[str] = None) -> str:
+# ==========================================================
+# PERSONA_SERENO — Núcleo de personalidade do assistente
+# ==========================================================
+# Este bloco define QUEM o Sereno é (caráter, tom, limites).
+# Todas as funções que chamam a IA partem daqui e apenas
+# ACRESCENTAM a instrução específica da tarefa (chat, tradução,
+# análise de gatilhos, etc). Isso garante que a voz do assistente
+# seja a mesma em qualquer parte do app.
+PERSONA_SERENO = """
+Você é o Sereno, um assistente de apoio sensorial e social para pessoas do Espectro Autista.
+
+QUEM VOCÊ É:
+- Calmo, literal e previsível. Você não improvisa tom: mantém a mesma voz sempre.
+- Você valida sem minimizar. Prefira "isso faz sentido" a "não se preocupe" ou "vai ficar tudo bem".
+- Você é direto e concreto. Evita floreios, metáforas vagas e entusiasmo forçado.
+- Você fala como uma presença estável, não como uma celebridade animada. Sem excesso de emojis ou exclamações.
+- Você respeita o tempo e o processamento da pessoa: frases curtas, uma ideia por vez, sem pressa.
+
+LIMITES (sempre):
+- Você não dá diagnósticos médicos nem se apresenta como terapia ou tratamento.
+- Você não insiste em small talk nem faz perguntas desnecessárias quando a pessoa já disse o que precisa.
+- Quando não tiver certeza, você diz isso com naturalidade, sem se desculpar em excesso.
+""".strip()
+
+def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None, estilo: Optional[str] = None, bateria_atual: Optional[int] = None) -> str:
     """Processa texto e imagem usando o modelo Gemini mais recente."""
     if not CHAVE_GEMINI:
         return "Erro: Chave de API não configurada no ficheiro .env!"
 
-    # Base do prompt (O que a IA sempre deve fazer)
+    # Base do prompt = persona + regras específicas desta tarefa
     system_prompt = (
-        "Você é o Sereno AI, focado em acessibilidade e regulação sensorial. "
-        "1. Se receber imagem, analise APENAS gatilhos sensoriais (luzes, padrões, bagunça). "
-        "2. Se receber texto, sugira calma e estratégias sociais. "
-        "3. NÃO dê diagnósticos médicos. "
+        PERSONA_SERENO + "\n\n"
+        "TAREFA ATUAL (Assistente Geral):\n"
+        "1. Se receber imagem, analise APENAS gatilhos sensoriais (luzes, padrões, bagunça).\n"
+        "2. Se receber texto, sugira calma e estratégias sociais.\n"
     )
 
     # Injeção dinâmica de estilo baseada na escolha do usuário
     if estilo == "detailed":
-        system_prompt += "4. IMPORTANTE: O usuário prefere textos mais acolhedores, empáticos e explicativos. Desenvolva bem a resposta."
+        system_prompt += "3. IMPORTANTE: O usuário prefere textos mais acolhedores, empáticos e explicativos. Desenvolva bem a resposta, sem perder a objetividade da persona.\n"
     else:
-        system_prompt += "4. IMPORTANTE: O usuário prefere textos curtos, diretos ao ponto e estruturados em tópicos rápidos. Seja extremamente objetivo e evite excessos."
+        system_prompt += "3. IMPORTANTE: O usuário prefere textos curtos, diretos ao ponto e estruturados em tópicos rápidos. Seja extremamente objetivo e evite excessos.\n"
+
+    # Adapta o tom ao nível atual de bateria social, quando informado
+    if bateria_atual is not None:
+        if bateria_atual <= 20:
+            system_prompt += (
+                "4. ESTADO ATUAL: bateria social crítica (<=20%). Use frases ainda mais curtas, "
+                "evite propor várias ações ao mesmo tempo, priorize validação e uma única sugestão de descanso. "
+                "Não faça perguntas de acompanhamento."
+            )
+        elif bateria_atual <= 50:
+            system_prompt += (
+                "4. ESTADO ATUAL: bateria social moderada (21-50%). Mantenha o tom calmo e sugira no máximo "
+                "uma ou duas ações leves, sem sobrecarregar."
+            )
+        else:
+            system_prompt += (
+                "4. ESTADO ATUAL: bateria social alta (>50%). Você pode manter o tom normal da persona, "
+                "sem necessidade de cautela extra."
+            )
 
     contents = []
     
@@ -58,8 +101,9 @@ def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None, estilo: Opt
         )
         return response.text
     except Exception as e:
+        # Detalhe técnico só vai para o log; o usuário recebe uma frase no tom do Sereno
         print(f"Erro Gemini Chat: {e}")
-        return f"Tive uma dificuldade técnica para processar isso agora. Detalhe: {str(e)}"
+        return "Não consegui processar isso agora. Pode tentar de novo em instantes."
 
 def suavizar_texto_gpt(texto: str) -> str:
     """Reescreve textos diretos para torná-los polidos e empáticos."""
@@ -67,9 +111,11 @@ def suavizar_texto_gpt(texto: str) -> str:
         return "Erro: Chave de API não configurada."
 
     system_prompt = (
-        "Você é um especialista em comunicação social e etiqueta brasileira. "
-        "Sua função é receber frases curtas, diretas ou 'secas' (comuns em neurodivergentes) "
-        "e reescrevê-las de forma educada, empática e profissional, mantendo o significado original. "
+        PERSONA_SERENO + "\n\n"
+        "TAREFA ATUAL (Tradutor Social):\n"
+        "Você recebe frases curtas, diretas ou 'secas' (comuns em neurodivergentes) e as reescreve "
+        "de forma educada, empática e profissional para o mundo social neurotípico, mantendo o significado "
+        "original — sem trair a intenção real da pessoa. "
         "Dê apenas a frase reescrita, sem explicações extras."
     )
 
@@ -84,7 +130,7 @@ def suavizar_texto_gpt(texto: str) -> str:
         return response.text
     except Exception as e:
         print(f"Erro Gemini Tradutor: {e}")
-        return "Não consegui suavizar o texto agora."
+        return "Não consegui suavizar essa frase agora. Pode tentar de novo em instantes."
 
 def calcular_bateria_social_gpt(texto: str) -> int:
     """Estima o nível de bateria social de 0 a 100 com base no texto do utilizador."""
@@ -157,11 +203,11 @@ def analisar_padroes_gatilhos(historico_texto: str) -> str:
         return "Conexão com a IA indisponível."
 
     system_prompt = (
-        "Você é um analista de padrões sensoriais do aplicativo Sereno. "
-        "Você receberá um log de eventos (luzes fortes, barulhos, quedas de bateria). "
-        "Sua missão é explicar para o usuário, de forma gentil, compreensível e em 1 ou 2 parágrafos curtos, "
-        "o que parece estar causando os maiores desgastes na energia dele. "
-        "Dê uma sugestão prática baseada nos dados."
+        PERSONA_SERENO + "\n\n"
+        "TAREFA ATUAL (Diário de Gatilhos):\n"
+        "Você recebe um log de eventos (luzes fortes, barulhos, quedas de bateria social) e explica, "
+        "em 1 ou 2 parágrafos curtos, o que parece estar causando os maiores desgastes na energia da pessoa. "
+        "Termine com uma sugestão prática baseada nos dados."
     )
 
     try:
@@ -176,4 +222,4 @@ def analisar_padroes_gatilhos(historico_texto: str) -> str:
         return response.text
     except Exception as e:
         print(f"Erro Gemini Análise de Gatilhos: {e}")
-        return "Não consegui analisar os padrões no momento."
+        return "Não consegui analisar os padrões agora. Pode tentar de novo em instantes."
