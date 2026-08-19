@@ -1,17 +1,26 @@
+# main.py
 import serial # type: ignore
 import time
+from datetime import datetime, timezone
+from pydantic import BaseModel # type: ignore
 from fastapi import FastAPI, Depends, Body # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
 from sqlmodel import Session, select # type: ignore
-from services import analisar_padroes_gatilhos # type: ignore
 
-# --- IMPORTAÇÕES LOCAIS ---
+# --- IMPORTAÇÕES LOCAIS E SERVICES ---
 from database import create_db_and_tables, get_session
 from models import Script, SocialBattery, ChatRequest, BatteryRequest, TriggerEvent
-from services import gerar_resposta_gpt, prever_sobrecarga_mmq, suavizar_texto_gpt, calcular_bateria_social_gpt
+from services import (
+    gerar_resposta_gpt, 
+    suavizar_texto_gpt, 
+    analisar_padroes_gatilhos,
+    calcular_impacto_prompt_gpt,
+    processar_interacao_bateria,
+    prever_sobrecarga_mmq
+)
 
 # ---------- CONFIGURAÇÕES DO APP ----------
-app = FastAPI(title="Sereno Backend", version="0.6.0")
+app = FastAPI(title="Sereno Backend", version="0.7.0")
 
 # CORS (Permite que o HTML converse com o Python de forma segura)
 app.add_middleware(
@@ -31,19 +40,27 @@ app.add_middleware(
 create_db_and_tables()
 
 # ---------- CONFIGURAÇÃO DO HARDWARE (ARDUINO) ----------
-# Tenta conectar com o Arduino pela porta USB
 try:
-    # IMPORTANTE: Mude 'COM3' para a porta que aparecer na sua IDE do Arduino (ex: COM4, COM5)
+    # Mude 'COM3' para a porta do seu Arduino (ex: COM4, COM5)
     arduino = serial.Serial('COM3', 9600, timeout=1)
-    time.sleep(2) # Pausa rápida para o Arduino sincronizar
+    time.sleep(2)
     arduino_conectado = True
     print("✅ Arduino conectado com sucesso!")
 except Exception as e:
     print(f"⚠️ Aviso: Arduino não encontrado. O sistema funcionará apenas de forma virtual. Detalhe: {e}")
     arduino_conectado = False
 
-# ---------- VARIÁVEL GLOBAL (MEMÓRIA PREDITIVA) ----------
-historico_usuario = []
+# ---------- ESTADO GLOBAL TEMPORAL (BATERIA E MMQ) ----------
+bateria_atual_global = 100.0
+timestamp_ultimo_prompt_global = datetime.now(timezone.utc)
+timestamp_inicio_sessao = datetime.now(timezone.utc)
+historico_mmq_temporal = []  # Armazena tuplas: (minutos_decorridos, bateria)
+
+
+# ---------- MODELOS DE DADOS ADICIONAIS ----------
+class Planejamento(BaseModel):
+    bateria_atual: int
+    atividades: str
 
 
 # ---------- ROTAS DA API ----------
@@ -55,7 +72,6 @@ def home():
 # Rota de IA (Chat Geral)
 @app.post("/api/ia")
 def chat_endpoint(payload: ChatRequest):
-    # Passamos estilo e bateria_atual para o serviço, para a IA adaptar o tom
     resposta = gerar_resposta_gpt(payload.texto, payload.imagem, payload.estilo, payload.bateria_atual)
     return {"resposta": resposta}
 
@@ -65,25 +81,68 @@ def endpoint_suavizar(payload: ChatRequest):
     resultado = suavizar_texto_gpt(payload.texto)
     return {"revisado": resultado}
 
-# Rota de Cálculo Inteligente de Bateria + Previsão de Sobrecarga (MMQ)
+# Rota de Cálculo Inteligente de Bateria + Previsão de Sobrecarga (MMQ Temporal)
 @app.post("/api/bateria/calcular")
 def calcular_energia_endpoint(payload: ChatRequest):
-    global historico_usuario # Usa a lista global para lembrar das últimas pontuações
+    global bateria_atual_global, timestamp_ultimo_prompt_global, timestamp_inicio_sessao, historico_mmq_temporal
     
-    nivel_calculado = calcular_bateria_social_gpt(payload.texto)
+    # 1. Avalia o desgaste/ganho gerado pelo texto atual (-50 a +50)
+    impacto = calcular_impacto_prompt_gpt(payload.texto)
     
-    # Adiciona ao histórico e mantém apenas os últimos 5 registros
-    historico_usuario.append(nivel_calculado)
-    if len(historico_usuario) > 5:
-        historico_usuario.pop(0)
+    # 2. Processa a recuperação pelo tempo de descanso + o novo impacto
+    resultado_bateria = processar_interacao_bateria(
+        bateria_anterior=bateria_atual_global,
+        timestamp_ultimo_prompt=timestamp_ultimo_prompt_global,
+        impacto_prompt=impacto
+    )
     
-    # Calcula a previsão de queda usando a matemática de Mínimos Quadrados
-    analise = prever_sobrecarga_mmq(historico_usuario)
+    # Atualiza o estado em memória
+    bateria_atual_global = resultado_bateria["bateria_final"]
+    timestamp_ultimo_prompt_global = resultado_bateria["timestamp"]
+    
+    # 3. Registra os minutos decorridos reais desde o início da sessão e o nível atual
+    minutos_decorridos = (timestamp_ultimo_prompt_global - timestamp_inicio_sessao).total_seconds() / 60.0
+    historico_mmq_temporal.append((minutos_decorridos, bateria_atual_global))
+    
+    # Mantém os últimos 5 registros de janela deslizante
+    if len(historico_mmq_temporal) > 5:
+        historico_mmq_temporal.pop(0)
+    
+    # 4. Executa a previsão MMQ com base na série temporal
+    analise_mmq = prever_sobrecarga_mmq(historico_mmq_temporal)
     
     return {
-        "nivel_estimado": nivel_calculado,
-        "previsao": analise
+        "nivel_estimado": int(bateria_atual_global),
+        "previsao": analise_mmq
     }
+
+# Rota de Previsão de Energia para Planejamento de Atividades
+@app.post("/api/energia/prever")
+def prever_energia(plan: Planejamento):
+    prompt = f"""
+    Você é o Sereno, um assistente especialista em regulação sensorial e carga social.
+    O usuário possui atualmente {plan.bateria_atual}% de bateria social.
+    Ele planeja fazer as seguintes atividades hoje: "{plan.atividades}".
+    
+    Sua tarefa:
+    1. Analise o impacto sensorial, cognitivo e social de CADA atividade.
+    2. Atribua um "custo" em porcentagem (%) para cada uma.
+    3. Subtraia os custos da bateria atual ({plan.bateria_atual}%).
+    4. Veredito: O usuário conseguirá fazer tudo sem entrar em sobrecarga (bateria < 15%)? Diga o Saldo Final.
+    5. Estimativa de Recuperação: Analise o tamanho do desgaste gerado por essas atividades e estime o tempo e o tipo de descanso necessários para recarregar a bateria gasta.
+    
+    Formatação obrigatória: 
+    - Seja amigável e direto.
+    - Use bullet points para listar os custos das atividades.
+    - Crie um título final chamado "⏳ Tempo de Recuperação Estimado" para destacar a sua previsão de recarga.
+    """
+    
+    try:
+        resposta_texto = gerar_resposta_gpt(prompt, None)
+        return {"analise": resposta_texto}
+    except Exception as e:
+        print(f"Erro no planejamento com IA: {e}")
+        return {"analise": "Erro ao processar o planejamento com a IA."}
 
 # Rota de Bateria Social Manual
 @app.post("/api/battery")
@@ -92,7 +151,6 @@ def log_battery(payload: BatteryRequest, session: Session = Depends(get_session)
     session.add(novo_registro)
     session.commit()
     
-    sugestao = ""
     if payload.level <= 20:
         sugestao = "Bateria crítica. Ativando recomendações de descanso."
     elif payload.level <= 50:
@@ -106,16 +164,13 @@ def log_battery(payload: BatteryRequest, session: Session = Depends(get_session)
 @app.get("/api/battery/history")
 def get_battery_history(session: Session = Depends(get_session)):
     statement = select(SocialBattery).order_by(SocialBattery.timestamp.desc()).limit(10)
-    results = session.exec(statement).all()
-    return results
+    return session.exec(statement).all()
 
 # Rotas de Scripts Sociais
 @app.get("/scripts")
 def list_scripts(session: Session = Depends(get_session)):
     scripts = session.exec(select(Script)).all()
-    if not scripts:
-        return []
-    return scripts
+    return scripts if scripts else []
 
 @app.post("/scripts")
 def add_script(message: str = Body(..., embed=True), session: Session = Depends(get_session)):
@@ -133,16 +188,13 @@ def log_event(payload: dict = Body(...), session: Session = Depends(get_session)
     novo_evento = TriggerEvent(tipo=tipo, valor=int(valor))
     session.add(novo_evento)
     session.commit()
-    
     return {"status": "salvo no diario"}
 
 # Retorna os últimos eventos para o HTML
 @app.get("/api/triggers")
 def get_triggers(session: Session = Depends(get_session)):
-    # Pega os últimos 15 eventos
     statement = select(TriggerEvent).order_by(TriggerEvent.timestamp.desc()).limit(15)
-    eventos = session.exec(statement).all()
-    return eventos
+    return session.exec(statement).all()
 
 # Pede para a IA ler os eventos e achar o padrão
 @app.post("/api/triggers/analyze")
@@ -153,9 +205,7 @@ def analyze_triggers(session: Session = Depends(get_session)):
     if not eventos:
         return {"analise": "Ainda não há dados suficientes no seu diário para encontrar um padrão."}
     
-    # Transforma os eventos em um texto simples para a IA ler
     texto_historico = ", ".join([f"{e.tipo} (nível {e.valor}) às {e.timestamp.strftime('%H:%M')}" for e in eventos])
-    
     analise = analisar_padroes_gatilhos(texto_historico)
     return {"analise": analise}
 
@@ -165,10 +215,10 @@ def controlar_motor(dados: dict = Body(...)):
     
     if arduino_conectado:
         if estado == '1':
-            arduino.write(b'1') # Envia comando de LIGAR para o Arduino
+            arduino.write(b'1')
             return {"mensagem": "Motor ativado! Regulação tátil iniciada."}
         else:
-            arduino.write(b'0') # Envia comando de DESLIGAR
+            arduino.write(b'0')
             return {"mensagem": "Motor desativado!"}
     
     return {"erro": "Hardware físico não conectado. Conecte o Arduino no cabo USB."}
@@ -178,41 +228,3 @@ def controlar_motor(dados: dict = Body(...)):
 if __name__ == "__main__":
     import uvicorn # type: ignore
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-
-from pydantic import BaseModel
-
-# 1. Cria o modelo de dados para receber o plano
-class Planejamento(BaseModel):
-    bateria_atual: int
-    atividades: str
-
-# 2. Cria a nova rota de previsão
-@app.post("/api/energia/prever")
-def prever_energia(plan: Planejamento):
-    # Prompt de sistema que transforma a IA em uma "Contadora de Energia e Recuperação"
-    prompt = f"""
-    Você é o Sereno, um assistente especialista em regulação sensorial e carga social.
-    O usuário possui atualmente {plan.bateria_atual}% de bateria social.
-    Ele planeja fazer as seguintes atividades hoje: "{plan.atividades}".
-    
-    Sua tarefa:
-    1. Analise o impacto sensorial, cognitivo e social de CADA atividade.
-    2. Atribua um "custo" em porcentagem (%) para cada uma.
-    3. Subtraia os custos da bateria atual ({plan.bateria_atual}%).
-    4. Veredito: O usuário conseguirá fazer tudo sem entrar em sobrecarga (bateria < 15%)? Diga o Saldo Final.
-    5. Estimativa de Recuperação: Analise o tamanho do desgaste gerado por essas atividades e estime o tempo e o tipo de descanso necessários para recarregar a bateria gasta (ex: "45 minutos de isolamento acústico", "2 horas de hiperfoco", ou "Uma noite inteira de sono profundo").
-    
-    Formatação obrigatória: 
-    - Seja amigável e direto.
-    - Use bullet points para listar os custos das atividades.
-    - Crie um título final chamado "⏳ Tempo de Recuperação Estimado" para destacar a sua previsão de recarga, sugerindo o uso de ferramentas do app (como o gerador de ruído marrom/ondas do mar ou respiração guiada) se a carga for alta.
-    """
-    
-    try:
-        # Reutilizamos a função já existente no seu services.py!
-        resposta_texto = gerar_resposta_gpt(prompt, None)
-        
-        return {"analise": resposta_texto}
-    except Exception as e:
-        print(f"Erro real detectado na IA: {e}")
-        return {"analise": "Erro ao processar o planejamento com a IA."}

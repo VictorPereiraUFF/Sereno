@@ -2,16 +2,16 @@
 import os
 import re
 import base64
+from datetime import datetime, timezone
+from typing import Optional, List, Tuple, Dict
 from dotenv import load_dotenv  # type: ignore # Biblioteca para ler o ficheiro .env
 from google import genai
 from google.genai import types
-from typing import Optional
 
 # 1. Carrega as variáveis de ambiente do ficheiro .env
 load_dotenv()
 
 # 2. Configuração da Chave da API e do Cliente
-# A chave é lida de forma segura das variáveis de ambiente
 CHAVE_GEMINI = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=CHAVE_GEMINI)
 
@@ -21,11 +21,6 @@ MODELO_ATUAL = 'gemini-2.5-flash'
 # ==========================================================
 # PERSONA_SERENO — Núcleo de personalidade do assistente
 # ==========================================================
-# Este bloco define QUEM o Sereno é (caráter, tom, limites).
-# Todas as funções que chamam a IA partem daqui e apenas
-# ACRESCENTAM a instrução específica da tarefa (chat, tradução,
-# análise de gatilhos, etc). Isso garante que a voz do assistente
-# seja a mesma em qualquer parte do app.
 PERSONA_SERENO = """
 Você é o Sereno, um assistente de apoio sensorial e social para pessoas do Espectro Autista.
 
@@ -42,12 +37,15 @@ LIMITES (sempre):
 - Quando não tiver certeza, você diz isso com naturalidade, sem se desculpar em excesso.
 """.strip()
 
+# ==========================================================
+# MÓDULO DE INTERAÇÃO COM GEMINI (CHAT E TRADUÇÃO)
+# ==========================================================
+
 def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None, estilo: Optional[str] = None, bateria_atual: Optional[int] = None) -> str:
     """Processa texto e imagem usando o modelo Gemini mais recente."""
     if not CHAVE_GEMINI:
         return "Erro: Chave de API não configurada no ficheiro .env!"
 
-    # Base do prompt = persona + regras específicas desta tarefa
     system_prompt = (
         PERSONA_SERENO + "\n\n"
         "TAREFA ATUAL (Assistente Geral):\n"
@@ -55,13 +53,11 @@ def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None, estilo: Opt
         "2. Se receber texto, sugira calma e estratégias sociais.\n"
     )
 
-    # Injeção dinâmica de estilo baseada na escolha do usuário
     if estilo == "detailed":
         system_prompt += "3. IMPORTANTE: O usuário prefere textos mais acolhedores, empáticos e explicativos. Desenvolva bem a resposta, sem perder a objetividade da persona.\n"
     else:
         system_prompt += "3. IMPORTANTE: O usuário prefere textos curtos, diretos ao ponto e estruturados em tópicos rápidos. Seja extremamente objetivo e evite excessos.\n"
 
-    # Adapta o tom ao nível atual de bateria social, quando informado
     if bateria_atual is not None:
         if bateria_atual <= 20:
             system_prompt += (
@@ -101,7 +97,6 @@ def gerar_resposta_gpt(texto: str, imagem_b64: Optional[str] = None, estilo: Opt
         )
         return response.text
     except Exception as e:
-        # Detalhe técnico só vai para o log; o usuário recebe uma frase no tom do Sereno
         print(f"Erro Gemini Chat: {e}")
         return "Não consegui processar isso agora. Pode tentar de novo em instantes."
 
@@ -132,50 +127,108 @@ def suavizar_texto_gpt(texto: str) -> str:
         print(f"Erro Gemini Tradutor: {e}")
         return "Não consegui suavizar essa frase agora. Pode tentar de novo em instantes."
 
-def calcular_bateria_social_gpt(texto: str) -> int:
-    """Estima o nível de bateria social de 0 a 100 com base no texto do utilizador."""
+
+# ==========================================================
+# MÓDULO TEMPORAL DE BATERIA SOCIAL E MMQ
+# ==========================================================
+
+def calcular_impacto_prompt_gpt(texto: str) -> float:
+    """
+    Avalia a variação da bateria social (-30 a +20) gerada pelo prompt atual.
+    """
     if not CHAVE_GEMINI:
-        return 50 
+        return -5.0 
 
     system_prompt = (
-        "Você é um analisador de energia social e sobrecarga cognitiva para pessoas neurodivergentes. "
-        "Leia a intenção do usuário e estime o nível atual de disposição social dele em uma escala de 0 a 100. "
-        "Responda APENAS com um número inteiro (ex: 25). Não escreva mais nada."
+        "Você é um analisador de impacto emocional e sensorial. "
+        "Avalie o texto do usuário e retorne um número decimal relativo ao impacto no nível de energia dele: "
+        "Valores negativos para exaustão/estresse (ex: -20 para sobrecarga, -5 para leve cansaço) "
+        "e positivos para momentos de descanso ou calma (ex: +10). "
+        "Responda APENAS com o número. Exemplo: -15"
     )
 
     try:
         response = client.models.generate_content(
             model=MODELO_ATUAL,
-            contents=f"Calcule a bateria para: '{texto}'",
+            contents=f"Calcule o impacto na bateria para: '{texto}'",
             config=types.GenerateContentConfig(
                 system_instruction=system_prompt,
-                temperature=0.2,
+                temperature=0.1,
             )
         )
         resultado = response.text.strip()
-        
-        # Extração de números para garantir que o retorno é um inteiro
-        numeros = re.findall(r'\d+', resultado)
+        numeros = re.findall(r'[-+]?\d*\.?\d+', resultado)
         if numeros:
-            nivel = int(numeros[0])
-            return max(0, min(100, nivel))
-        return 50
+            impacto = float(numeros[0])
+            return max(-50.0, min(50.0, impacto))
+        return -5.0
     except Exception as e:
-        print(f"Erro Gemini Bateria: {e}")
-        return 50
-    
-def prever_sobrecarga_mmq(historico_bateria: list) -> dict:
-    """
-    Analisa a tendência da bateria social usando MMQ.
-    Retorna True se detectar uma queda brusca (sobrecarga iminente).
-    """
-    n = len(historico_bateria)
-    if n < 3:  # Necessário um histórico mínimo para prever tendência
-        return {"alerta": False, "mensagem": ""}
+        print(f"Erro Gemini Impacto: {e}")
+        return -5.0
 
-    # x = tempo (índice), y = nível da bateria
-    x = list(range(n))
-    y = historico_bateria
+
+def calcular_recuperacao_passiva(
+    bateria_anterior: float,
+    timestamp_ultimo_prompt: datetime,
+    tempo_recuperacao_minutos: float = 120.0,
+    timestamp_atual: Optional[datetime] = None
+) -> float:
+    """Calcula o ganho de bateria por tempo de descanso passivo."""
+    if timestamp_atual is None:
+        timestamp_atual = datetime.now(timezone.utc)
+        
+    if timestamp_ultimo_prompt.tzinfo is None:
+        timestamp_ultimo_prompt = timestamp_ultimo_prompt.replace(tzinfo=timezone.utc)
+
+    delta_t_minutos = max(0.0, (timestamp_atual - timestamp_ultimo_prompt).total_seconds() / 60.0)
+
+    if bateria_anterior >= 100.0 or tempo_recuperacao_minutos <= 0:
+        return min(100.0, bateria_anterior)
+
+    taxa_recuperacao = (100.0 - bateria_anterior) / tempo_recuperacao_minutos
+    bateria_recuperada = bateria_anterior + (taxa_recuperacao * delta_t_minutos)
+    return min(100.0, max(0.0, bateria_recuperada))
+
+
+def processar_interacao_bateria(
+    bateria_anterior: float,
+    timestamp_ultimo_prompt: datetime,
+    impacto_prompt: float,
+    tempo_recuperacao_estimado: float = 120.0
+) -> Dict[str, any]:
+    """Aplica a recuperação passiva e o desgaste do novo prompt."""
+    agora = datetime.now(timezone.utc)
+
+    # 1. Recuperação por descanso acumulado
+    bateria_base = calcular_recuperacao_passiva(
+        bateria_anterior=bateria_anterior,
+        timestamp_ultimo_prompt=timestamp_ultimo_prompt,
+        tempo_recuperacao_minutos=tempo_recuperacao_estimado,
+        timestamp_atual=agora
+    )
+
+    # 2. Impacto da nova interação
+    bateria_final = min(100.0, max(0.0, bateria_base + impacto_prompt))
+
+    return {
+        "bateria_base_recuperada": round(bateria_base, 2),
+        "bateria_final": round(bateria_final, 2),
+        "timestamp": agora
+    }
+
+
+def prever_sobrecarga_mmq(historico_temporal: List[Tuple[float, float]]) -> Dict[str, any]:
+    """
+    Aplica MMQ sobre pontos (x_i, y_i) em minutos decorridos reais:
+    x_i = minutos decorridos desde o primeiro registro
+    y_i = nível de bateria
+    """
+    n = len(historico_temporal)
+    if n < 3:
+        return {"alerta": False, "m": 0.0, "mensagem": "Histórico insuficiente."}
+
+    x = [ponto[0] for ponto in historico_temporal]
+    y = [ponto[1] for ponto in historico_temporal]
 
     soma_x = sum(x)
     soma_y = sum(y)
@@ -184,19 +237,25 @@ def prever_sobrecarga_mmq(historico_bateria: list) -> dict:
 
     denominador = (n * soma_x2) - (soma_x**2)
     if denominador == 0:
-        return {"alerta": False, "mensagem": ""}
+        return {"alerta": False, "m": 0.0, "mensagem": ""}
 
-    # Cálculo da inclinação (m)
+    # Inclinação m (% de energia perdida por minuto)
     m = ((n * soma_xy) - (soma_x * soma_y)) / denominador
 
-    # Se m < -5, a bateria está a cair mais de 5% por interação
-    if m <= -5.0:
+    # Gatilho: perda acentuada por minuto de interação contínua
+    if m <= -0.5:
         return {
             "alerta": True,
+            "m": round(m, 3),
             "mensagem": "⚠️ Alerta: Queda rápida de energia detectada. Sugerimos pausa imediata."
         }
     
-    return {"alerta": False, "mensagem": "Energia estável."}
+    return {"alerta": False, "m": round(m, 3), "mensagem": "Energia estável."}
+
+
+# ==========================================================
+# MÓDULO DE ANÁLISE DE GATILHOS
+# ==========================================================
 
 def analisar_padroes_gatilhos(historico_texto: str) -> str:
     if not CHAVE_GEMINI:
@@ -216,7 +275,7 @@ def analisar_padroes_gatilhos(historico_texto: str) -> str:
             contents=f"Analise este histórico e encontre o padrão: {historico_texto}",
             config=types.GenerateContentConfig(
                 system_instruction=system_prompt,
-                temperature=0.3, # Temperatura baixa para ser mais analítico e preciso
+                temperature=0.3,
             )
         )
         return response.text
